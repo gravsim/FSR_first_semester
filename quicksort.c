@@ -1,18 +1,12 @@
 int partition(int arr[], int low, int high) {
-    // Initialize pivot to be the first element
     int pivot = arr[low];
     int i = low;
     int j = high;
 
     while (i < j) {
-        // Find the first element greater than
-        // the pivot (from starting)
         while (arr[i] <= pivot && i <= high - 1) {
             i++;
         }
-
-        // Find the first element smaller than
-        // the pivot (from last)
         while (arr[j] > pivot && j >= low + 1) {
             j--;
         }
@@ -24,15 +18,11 @@ int partition(int arr[], int low, int high) {
     return j;
 }
 
-void quickSort(int arr[], int low, int high) {
+
+void my_quick_sort(int arr[], int low, int high) {
     if (low < high) {
-
-        // call partition function to find Partition Index
         int pi = partition(arr, low, high);
-
-        // Recursively call quickSort() for left and right
-        // half based on Partition Index
-        quickSort(arr, low, pi - 1);
-        quickSort(arr, pi + 1, high);
+        my_quick_sort(arr, low, pi - 1);
+        my_quick_sort(arr, pi + 1, high);
     }
 }
