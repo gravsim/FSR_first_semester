@@ -1,38 +1,15 @@
 #include <stdio.h>
-#include <stdbool.h>
 
-bool is_full(int start_i, int start_j, int end_i, int end_j, bool array[1000][1000]) {
-    int i, j;
-    for (i = start_i; i < end_i; i++) {
-        for (j = start_j; j < end_j; j++) {
-            if (array[i][j] == false) {
-                return false;
-            }
-        }
+
+int min(int a, int b, int c) {
+    int min = a;
+    if (b < min) {
+        min = b;
     }
-    return true;
-}
-
-
-int find_max_len(int N, int M, bool array[1000][1000], int left_corner[]) {
-    int max_len = 1;
-    int len = 1;
-    int i;
-    int j;
-    for (i = 0; i < N; i++) {
-        for (j = 0; j < M; j++) {
-            len = 1;
-            while ((i + len <= N) && (j + len <= M) && is_full(i, j, i + len, j + len, array)) {
-                len++;
-            }
-            if (len > max_len) {
-                max_len = len;
-                left_corner[0] = i;
-                left_corner[1] = j;
-            }
-        }
+    if (c < min) {
+        min = c;
     }
-    return max_len - 1;
+    return min;
 }
 
 
@@ -41,17 +18,29 @@ int main() {
     int m;
     int number;
     scanf("%d %d", &n, &m);
-    bool array[1000][1000] = {false};
-    
+    short squares[1000][1000] = {0};
     int i, j;
-    int left_corner[2];
+    int best_i, best_j;
+    int max_len = 1;
     for (i = 0; i < n; i++) {
         for (j = 0; j < m; j++) {
             scanf("%d", &number);
-            array[i][j] = number == 1 ? true : false;
+            if (number == 1) {
+                if (i == 0 || j == 0) {
+                    squares[i][j] = 1;
+                } else {
+                    squares[i][j] = 1 + min(squares[i - 1][j],
+                                        squares[i][j - 1],
+                                        squares[i - 1][j - 1]);
+                }
+                if (squares[i][j] > max_len) {
+                    max_len = squares[i][j];
+                    best_i = i;
+                    best_j = j;
+                }
+            }
         }
     }
-    int max_len = find_max_len(n, m, array, left_corner);
-    printf("%d \n%d %d", max_len, left_corner[0] + 1, left_corner[1] + 1);
+    printf("%d \n%d %d", max_len, best_i - max_len + 2, best_j - max_len + 2);
     return 0;
 }
