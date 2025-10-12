@@ -1,28 +1,27 @@
-int partition(int arr[], int low, int high) {
-    int pivot = arr[low];
-    int i = low;
-    int j = high;
-
-    while (i < j) {
-        while (arr[i] <= pivot && i <= high - 1) {
-            i++;
-        }
-        while (arr[j] > pivot && j >= low + 1) {
-            j--;
-        }
-        if (i < j) {
-            swap(&arr[i], &arr[j]);
-        }
-    }
-    swap(&arr[low], &arr[j]);
-    return j;
+void swap(long long *a, long long *b) {
+    long long tmp = *a;
+    *a = *b;
+    *b = tmp;
 }
 
+int partition(long long array[], long long low, long long high) {
+    long long pivot = array[high];
+    long long i = (low - 1);
+    long long j;
+    for (j = low; j < high; j++) {
+        if (array[j] <= pivot) {
+            i++;
+            swap(&array[i], &array[j]);
+        }
+    }
+    swap(&array[i + 1], &array[high]);
+    return (i + 1);
+}
 
-void my_quick_sort(int arr[], int low, int high) {
+void quick_sort(long long array[], long long low, long long high) {
     if (low < high) {
-        int pi = partition(arr, low, high);
-        my_quick_sort(arr, low, pi - 1);
-        my_quick_sort(arr, pi + 1, high);
+        long long pi = partition(array, low, high);
+        quick_sort(array, low, pi - 1);
+        quick_sort(array, pi + 1, high);
     }
 }

@@ -1,46 +1,33 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 
 int find_max_area(int heights[], int M) {
-    int i, j;
-    int min = heights[0];
-    int area = 0;
-    int cut_heights[5000] = {0};
-    int slice_heights[1000] = {0};
-    printf("\nHeights: ");
-    for (i = 0; i < M; i++) {
-        printf("%d ", heights[i]);
-        if (heights[i] < min) {
-            min = heights[i];
-        }
-    }
-    printf("END\n");
-    int max_area = min * M;
-    for (i = 0; i < M; i++) {
-        cut_heights[i] = heights[i] - min;
-    }
-
-    for (i = 0; i < M; i++) {
-        j = i;
-        while (j < M && cut_heights[j] >= cut_heights[i]) {
-            j++;
-        }
-        if (cut_heights[j] < cut_heights[i]) {
-            int k;
-            for (k = 0; k < (j - i); k++) {
-                slice_heights[k] = cut_heights[i + k];
+    int stack[5000]; 
+    int top = -1;
+    int area;
+    int max_area = 0;
+    int i = 0;
+    int h;
+    int height_rect;
+    int width_rect;
+    while (i <= M) {
+        h = (i == M) ? 0 : heights[i]; 
+        if (top != -1 && h < heights[stack[top]]) {
+            height_rect = heights[stack[top]];
+            top--;
+            width_rect = (top == -1) ? i : (i - stack[top] - 1);
+            area = height_rect * width_rect;
+            if (area > max_area) {
+                max_area = area;
             }
-            area = find_max_area(slice_heights, j - i);
-        } else {
-            area = (cut_heights[i] + min) * (j - i + 1);
         }
-        
-        printf("\nArea: %d. ", area);
-        if (area > max_area) {
-            max_area = area;
+        else {
+            stack[top + 1] = i;
+            top++;
+            i++;
         }
     }
-    printf("\nMax area: %d. ", max_area);
     return max_area;
 }
 
@@ -50,8 +37,8 @@ int main() {
     int M;
     int number;
     scanf("%d %d", &N, &M);
-    int heights[5000] = {0};
     int i, j;
+    int *heights = (int*)calloc(M, sizeof(int));
     int max_area = 0;
     for (i = 0; i < N; i++) {
         for (j = 0; j < M; j++) {
