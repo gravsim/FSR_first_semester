@@ -35,8 +35,11 @@ void print_list(struct Node *head_p) {
     }
     struct Node *tail = head_p;
     while (tail) {
-        printf("%d ", tail -> value);
+        printf("%d", tail -> value);
         tail = tail -> next;
+        if (tail) {
+            printf(" ");
+        }
     }
     printf("\n");
 }

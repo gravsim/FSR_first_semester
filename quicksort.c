@@ -4,6 +4,7 @@ void swap(long long *a, long long *b) {
     *b = tmp;
 }
 
+
 int partition(long long array[], long long low, long long high) {
     long long pivot = array[high];
     long long i = (low - 1);
@@ -17,6 +18,7 @@ int partition(long long array[], long long low, long long high) {
     swap(&array[i + 1], &array[high]);
     return (i + 1);
 }
+
 
 void quick_sort(long long array[], long long low, long long high) {
     if (low < high) {
