@@ -9,7 +9,7 @@ struct Node
 };
 
 
-int insert(struct Node **head_pp, int value) {
+int insert(struct Node **head_pp, long long value) {
     struct Node *new_node = (struct Node*)malloc(sizeof(struct Node));
     if (!new_node) return -2;
     new_node->value = value;
@@ -24,14 +24,11 @@ int insert(struct Node **head_pp, int value) {
 }
 
 
-int insert_before(struct Node **head_pp, int search_value, int value) {
+int insert_after(struct Node **head_pp, int search_value, int value) {
     if (!*head_pp) {
         return -1;
     }
     struct Node *current = *head_pp;
-    if ((*head_pp)->value == search_value) {
-        return insert(head_pp, value);
-    }
     while (current->next) {
         if (current->next->value == search_value) {
             struct Node *new_node = (struct Node*)malloc(sizeof(struct Node));
@@ -43,6 +40,7 @@ int insert_before(struct Node **head_pp, int search_value, int value) {
         }
         current = current->next;
     }
+    return -1;
 }
 
 
@@ -87,18 +85,18 @@ void free_list(struct Node **head) {
 
 
 int main() {
-    int command, number, search_number;
+    long long command, number, search_number;
     struct Node *head = NULL;
-    scanf("%d", &command);
+    scanf("%lld", &command);
     while (command != 6) {
         switch (command) {
             case 1:
-                scanf("%d", &number);
+                scanf("%lld", &number);
                 insert(&head, number);
                 break;
             case 2:
-                scanf("%d %d", &number, &search_number);
-                insert_before(&head, number, search_number);
+                scanf("%lld %lld", &search_number, &number);
+                insert_after(&head, search_number, number);
                 break;
             case 3:
                 extract(&head);
