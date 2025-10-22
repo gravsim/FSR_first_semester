@@ -60,7 +60,6 @@ void extract(struct Node **head_pp) {
 
 void print_list(struct Node *head_p) {
     if (!head_p) {
-        printf("\n");
         return;
     }
     struct Node *current = head_p;
