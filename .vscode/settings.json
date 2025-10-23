@@ -4,6 +4,17 @@
         "stdio.h": "c",
         "stdlib.h": "c",
         "stdbool.h": "c",
-        "type_traits": "c"
+        "type_traits": "c",
+        "array": "c",
+        "deque": "c",
+        "string": "c",
+        "unordered_map": "c",
+        "vector": "c",
+        "string_view": "c",
+        "format": "c",
+        "initializer_list": "c",
+        "ranges": "c",
+        "span": "c",
+        "text_encoding": "c"
     }
 }
