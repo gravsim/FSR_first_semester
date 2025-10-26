@@ -19,7 +19,7 @@ void separate(int remaining_sum, int max_value, int len, int* array) {
         print_array(len, array);
         return;
     }
-    for (i = max_value; i > 0; i--) {
+    for (i = 1; i <= max_value; i++) {
         if (i <= remaining_sum) {
             array[len] = i;
             separate(remaining_sum - i, i, len + 1, array);
@@ -32,7 +32,6 @@ int main() {
     int N;
     scanf("%d", &N);
     int* array = (int*)calloc(N, sizeof(int));
-    array[0] = N;
     separate(N, N, 0, array);
     free(array);
     return 0;
