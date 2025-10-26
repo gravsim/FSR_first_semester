@@ -2,9 +2,9 @@
 #include <stdlib.h>
 
 
-void print_array(int N, int* array) {
+void print_array(int size, int* array) {
     int i;
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < size; i++) {
         if (array[i]) {
             printf("%d ", array[i]);
         }
@@ -13,31 +13,17 @@ void print_array(int N, int* array) {
 }
 
 
-void check_previous(int i, int* array) {
-    array[i]--;
-    array[i - 1]++;
-    if (array[i - 2] < array[i - 1]) {
-        check_previous(i - 1, array);
-    }
-}
-
-
-void separate(int N, int* array) {
+void separate(int remaining_sum, int max_value, int len, int* array) {
     int i;
-    print_array(N, array);
-    for (i = N; i >= 0; i--) {
-        if (array[i] > 0 && i > 0 && array[i - 1] >= array[i]) {
-            check_previous(i, array);
-            separate(N, array);
+    if (remaining_sum == 0) {
+        print_array(len, array);
+        return;
+    }
+    for (i = max_value; i > 0; i--) {
+        if (i <= remaining_sum) {
+            array[len] = i;
+            separate(remaining_sum - i, i, len + 1, array);
         }
-    }
-}
-
-
-void fill_array(int N, int* array) {
-    int i;
-    for (i = 0; i < N; i++) {
-        array[i] = 1;
     }
 }
 
@@ -46,7 +32,8 @@ int main() {
     int N;
     scanf("%d", &N);
     int* array = (int*)calloc(N, sizeof(int));
-    fill_array(N, array);
-    separate(N, array);
+    array[0] = N;
+    separate(N, N, 0, array);
+    free(array);
     return 0;
 }
