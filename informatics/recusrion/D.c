@@ -13,25 +13,44 @@ int is_number(char number) {
 }
 
 
-int extract_number(int* i, char* array) {
-    int number = 0;
+int extract_multiplier(int* i, char* array) {
+    int multiplier = 0;
     int sign = 1;
-    if (array[*i] == 'x') {
-        return 1;
-    }
     if (array[*i] == '-') {
-        printf("BEBAR ");
-        number = 1;
         sign = -1;
-
+    }
+    (*i)++;
+    if (array[*i] == 'x') {
+        multiplier = 1;
+        return sign * multiplier;
     }
     while (is_number(array[*i])) {
-        number *= 10;
-        number += char2int(array[*i]);
+        multiplier *= 10;
+        multiplier += char2int(array[*i]);
         (*i)++;
     }
-    printf("Coeff: %d\n", sign * number);
-    return sign * number;
+    return sign * multiplier;
+}
+
+
+int extract_power(int* i, char* array) {
+    int power = 0;
+    if (array[*i] == 'x') {
+        (*i)++;
+        if (array[*i] == '^') {
+            (*i)++;
+            while (is_number(array[*i])) {
+                power *= 10;
+                power += char2int(array[*i]);
+                (*i)++;
+            }
+        } else {
+            power = 1;
+        }
+    } else if (array[*i] == '\0') {
+        power = 0;
+    }
+    return power;
 }
 
 
@@ -47,26 +66,16 @@ void print_array(int N, int* array) {
 
 void read_polynomial(char* polynomial, int* multipliers) {
     int i = 0;
-    int index;
+    int power = 1;
     int multiplier;
-    while (polynomial[i] != '\0') {
-        if (polynomial[i - 1] == '+' || i == 0) {
-            multiplier = extract_number(&i, polynomial);
-            i += 1;
-            if (polynomial[i] == '^') {
-                i++;
-                index = extract_number(&i, polynomial);
-            } else if (polynomial[i] == '+' || polynomial[i - 1] == 'x') {
-                index = 1;
-            } else if (polynomial[i] == '\0') {
-                index = 0;
-            }
-            // printf("index: %d, value = %c ", index, polynomial[i]);
-            multipliers[index] = multiplier;
-        } else {
-            i++;
-        }
+    while (polynomial[i] != '\0' && power != 0) {
+        multiplier = extract_multiplier(&i, polynomial);
+        power = extract_power(&i, polynomial);
+        // printf("\nMultiplier: %d", multiplier);
+        // printf(", power: %d ", power);
+        multipliers[power] = multiplier;
     }
+    // printf("\nArray readed.\n\n");
 }
 
 
@@ -87,13 +96,17 @@ void get_multiplication(int* result, int* multipliers1, int* multipliers2) {
 void print_polynomial(int* polynomial) {
     int i;
     int counter = 0;
-    for (i = 10; i >=0; i--) {
-        if (polynomial[i] > 0) {
-            if (counter > 0) {
+    for (i = 10; i >= 0; i--) {
+        if (polynomial[i] != 0) {
+            if (counter > 0 && polynomial[i] > 0) {
                 printf("+");
             }
-            if (polynomial[i] != 1) {
-                printf("%d", polynomial[i]);
+            if (polynomial[i] != 1 || i == 0) {
+                if (polynomial[i] == -1) {
+                    printf("-");
+                } else {
+                    printf("%d", polynomial[i]);
+                }
             }
             if (i > 1) {
                 printf("x^%d", i);
@@ -104,7 +117,6 @@ void print_polynomial(int* polynomial) {
         }
     }
 }
-
 
 
 int main() {
