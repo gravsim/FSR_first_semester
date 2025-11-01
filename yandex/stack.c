@@ -4,11 +4,21 @@
 
 struct stack {
     int size;
-    char values[100];
+    int max_size;
+    char* values;
 };
 
 
+void expand(struct stack* stack) {
+    stack->values = (char*)realloc(stack->values, 2 * stack->max_size * sizeof(char));
+    stack->max_size *= 2;
+}
+
+
 int push(struct stack* stack, char* element) {
+    if (stack->size >= stack->max_size) {
+        expand(stack);
+    }
     stack->values[stack->size] = *element;
     (stack->size)++;
     return 1;
@@ -40,40 +50,45 @@ int clear(struct stack* stack) {
 }
 
 
+int check_stack(struct stack* stack) {
+    int true_false;
+    is_empty(stack, &true_false);
+    if (true_false) {
+        printf("Stack is empty\n");
+    }
+    return !true_false;
+}
+
+
 int main() {
     int command;
     char element;
     struct stack* stack = (struct stack*)malloc(sizeof(struct stack));
     stack->size = 0;
-    int true_false;
+    stack->max_size = 100;
+    stack->values = (char*)calloc(stack->max_size, sizeof(char));
     do {
         scanf("%i", &command);
-        printf("\nSize: %i.\n", stack->size);
         switch (command) {
             case 1:
+                scanf(" %c", &element);
                 push(stack, &element);
                 break;
             case 2:
-                if (stack->size == 0) {
-                    printf("Stack is empty\n");
-                } else {
+                if (check_stack(stack)) {
                     pop(stack, &element);
-                    printf("%c\n", element);
                 }
                 break;
             case 3:
-                if (stack->size == 0) {
-                    printf("Stack is empty\n");
-                } else {
+                if (check_stack(stack)) {
                     top(stack, &element);
                     printf("%c\n", element);
                 }
                 break;
             case 4:
+                int true_false;
                 is_empty(stack, &true_false);
-                if (true_false) {
-                    printf("Stack is empty\n");
-                }
+                printf("%i\n", true_false);
                 break;
             case 5:
                 clear(stack);
@@ -82,5 +97,7 @@ int main() {
                 break;
         }
     } while (command != 0);
+    free(stack->values);
+    free(stack);
     return 0;
 }
