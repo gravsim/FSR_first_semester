@@ -9,14 +9,14 @@ typedef struct Child {
 } Child;
 
 
-int kill_children(Child* child, long* deleted) {
+int remove_children(Child* child, long* deleted) {
     if (!child) {
         return 0;
     }
     long i;
     (*deleted)++;
     for (i = 0; i < child->family_size; i++) {
-        kill_children(child->children[i], deleted);
+        remove_children(child->children[i], deleted);
     }
     return 0;
 }
@@ -58,7 +58,7 @@ int main(void) {
         }
         i++;
     }
-    kill_children(target, &deleted);
+    remove_children(target, &deleted);
     printf("%li", deleted);
     for (i = 1; i <= N; i++) {
         if (numbers[i]) {
