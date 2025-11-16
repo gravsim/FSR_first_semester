@@ -9,7 +9,7 @@ typedef struct Node
 } Node;
 
 
-int insert(Node** beg_pp, Node** end_pp, int value) {
+int insert(Node** beg_pp, int value) {
     Node* new_node = malloc(sizeof(Node));
     if (!new_node) {
         return -2;
@@ -17,12 +17,11 @@ int insert(Node** beg_pp, Node** end_pp, int value) {
     new_node->value = value;
     if (!*beg_pp) {
         new_node->next = NULL;
-        new_node->previous = NULL;
-        *end_pp = new_node;
     } else {
+        (*beg_pp)->previous = new_node;
         new_node->next = *beg_pp;
-        new_node->previous = NULL;
     }
+    new_node->previous = NULL;
     *beg_pp = new_node;
     return 0;
 }
@@ -50,34 +49,42 @@ int search_element(Node** beg_pp, int target, Node** result) {
 }
 
 
-int put_in_end(Node** beg_pp, Node** end_pp, Node** node) {
-    if (!(*node)->next) {
+int put_in_beginning(Node** beg_pp, Node** node) {
+    if (!(*node)->previous) {
         return 1;
     }
-    if (!(*node)->previous) {
-        (*node)->next->previous = NULL;
-        *beg_pp = (*node)->next;
+    if (!(*node)->next) {
+        (*node)->previous->next = NULL;
     } else {
-        (*node)->next->previous = NULL;
+        (*node)->next->previous = (*node)->previous;
+        (*node)->previous->next = (*node)->next;
     }
-
-    (*node)->next = NULL;
-    (*node)->previous = *end_pp;
-    (*end_pp)->next = *node;
-    *end_pp = *node;
-
-
+    (*node)->previous = NULL;
+    (*node)->next = *beg_pp;
+    (*beg_pp)->previous = *node;
+    *beg_pp = *node;
     return 0;
 }
 
 
-
-int read_list(int list_len, Node** beg_pp, Node** end_pp) {
+int read_list(int list_len, Node** beg_pp) {
     int i;
     int number;
     for (i = 0; i < list_len; i++) {
         scanf("%d", &number);
-        insert(beg_pp, end_pp, number);
+        insert(beg_pp, number);
+    }
+    return 0;
+}
+
+
+int clear(Node** beg_pp) {
+    Node* next;
+    Node* current = *beg_pp;
+    while (current) {
+        next = current->next;
+        free(current);
+        current = next;
     }
     return 0;
 }
@@ -87,22 +94,15 @@ int main(void) {
     int len;
     int target;
     Node* result;
-    scanf("%d ", &len);
+    scanf("%d", &len);
     Node* beg_p = NULL;
-    Node* end_p = NULL;
-    Node* next;
-    read_list(len, &beg_p, &end_p);
-    Node* current = beg_p;
+    read_list(len, &beg_p);
     scanf("%d", &target);
     while (search_element(&beg_p, target, &result)) {
-        put_in_end(&beg_p, &end_p, &result);
+        put_in_beginning(&beg_p, &result);
         scanf("%d", &target);
     }
     print_list(beg_p);
-    while (current) {
-        next = current->next;
-        free(current);
-        current = next; 
-    }
+    clear(&beg_p);
     return 0;
 }
