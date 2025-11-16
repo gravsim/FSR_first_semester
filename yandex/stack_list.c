@@ -73,7 +73,7 @@ int check_Stack(struct Stack* stack) {
 }
 
 
-int main() {
+int main(void) {
     int command;
     char value;
     struct Stack* stack = (struct Stack*)malloc(sizeof(struct Stack));
