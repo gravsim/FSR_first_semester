@@ -6,7 +6,6 @@ int main(void) {
     scanf("%d", &N);
     int colors[1000];
     int i;
-    int buffer;
     for (i = 0; i < N; i++) {
         scanf("%d", &colors[i]);
     }

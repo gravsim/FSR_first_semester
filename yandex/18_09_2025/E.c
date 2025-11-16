@@ -1,5 +1,5 @@
 #include <stdio.h>
-
+#include <math.h>
 
 int main(void) {
     double x;
@@ -21,7 +21,7 @@ int main(void) {
         previous = current;
         current = next;
     }
-    if (current == -0.0) current = 0.0;
+    if (fabs(current) < 1e-9) current = 0.0;
     printf("%lf", current);
     return 0;
 }

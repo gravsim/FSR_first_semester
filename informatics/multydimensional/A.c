@@ -3,7 +3,6 @@
 
 int main(void) {
     int size;
-    int array[20][20];
     scanf("%d", &size);
     int i, j;
     int main_d_sum = 0;

@@ -68,7 +68,7 @@ int main(void) {
     }
 
     long(*colored)[2] = malloc(sizeof(long[5 * N][2]));
-    long i, j, k;
+    long i, k;
     long x, y;
     k = 0;
     for (i = 0; i < N; i++) {

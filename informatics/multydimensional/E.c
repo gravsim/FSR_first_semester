@@ -14,8 +14,6 @@ int main(void) {
     char array[BOARD_LEN][BOARD_LEN];
     int attacked[BOARD_LEN][BOARD_LEN] = {0};
     int i, j, k, l;
-    int x, y;
-    int number;
     char character;
     int answer = 64;
     for (i = 0; i < BOARD_LEN; i++) {
@@ -80,6 +78,8 @@ int main(void) {
                         k++;
                         l--;
                     }
+                    break;
+                default:
                     break;
             }
         }

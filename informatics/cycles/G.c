@@ -2,7 +2,7 @@
 
 
 int main(void) {
-    int A, B, buffer, iteration;
+    int A, B, iteration;
     scanf("%d %d", &A, &B);
     if (A < B) {
         for (iteration = A; iteration <= B; iteration++) {

@@ -20,7 +20,7 @@ int main(void) {
     int N;
     scanf("%d", &N);
     char** array = (char**)calloc(N, sizeof(char*));
-    int i, j;
+    int i;
     for (i = 0; i < N; i++) {
         array[i] = (char*)calloc(N + 1, sizeof(char));
         scanf("%s", array[i]);

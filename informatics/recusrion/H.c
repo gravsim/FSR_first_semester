@@ -47,6 +47,7 @@ int put_on_sides(int N,
         scales->right_size++;
         return 1;
     }
+    return 0;
 }
 
 
