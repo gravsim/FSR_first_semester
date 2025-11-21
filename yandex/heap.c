@@ -113,11 +113,11 @@ int check_heap(Heap* heap) {
 }
 
 
-int init_heap(Heap* heap) {
-    heap = malloc(sizeof(Heap));
-    heap->size = 0;
-    heap->capacity = 1000;
-    heap->values = (int*)calloc(heap->capacity, sizeof(int));
+int init_heap(Heap** heap) {
+    *heap = malloc(sizeof(Heap));
+    (*heap)->size = 0;
+    (*heap)->capacity = 1000;
+    (*heap)->values = (int*)calloc((*heap)->capacity, sizeof(int));
     return 0;
 }
 
@@ -128,7 +128,7 @@ int main(void) {
     int old;
     int new;
     Heap* heap;
-    init_heap(heap);
+    init_heap(&heap);
     do {
         scanf("%i", &command);
         switch (command) {
