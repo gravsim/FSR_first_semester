@@ -10,37 +10,6 @@ typedef struct Node {
 } Node;
 
 
-int in_tree(Node* root_p, int value) {
-    while (root_p) {
-        if (root_p->value == value) {
-            return 1;
-        }
-        if (root_p->value > value) {
-            root_p = root_p->right;
-        } else {
-            root_p = root_p->left;
-        }
-    }
-    return 0;
-}
-
-
-int search(Node* root_p, int value) {
-    int biggest = INT_MIN;
-    while (root_p) {
-        if (root_p->value > biggest && root_p->value < value) {
-            biggest = root_p->value;
-        }
-        if (root_p->value < value) {
-            root_p = root_p->left;
-        } else {
-            root_p = root_p->right;
-        }
-    }
-    return biggest;
-}
-
-
 Node* find_leaf(Node* root_p, int value) {
     Node* current = root_p;
     while (current) {
@@ -110,6 +79,64 @@ int delete_root(Node** root_pp) {
     return 1;
 }
 
+Node* find_deleting(Node* root_p, int value) {
+    Node* found = root_p;
+    while (found && found->value != value) {
+        if (found->value > value) {
+            found = found->right;
+        } else {
+            found = found->left;
+        }
+    }
+    return found;
+}
+
+
+int find_leaf2clear(Node** root_pp, int value) {
+    Node** current = root_pp;
+    Node** parent;
+    int return_value;
+    while (*current) {
+        parent = current;
+        if (((*current)->value > value && !(*current)->right)
+            || ((*current)->value < value && !(*current)->left)) {
+            return_value = (*current)->value;
+            *parent = NULL;
+            free(*current);
+            return return_value;
+            }
+        if ((*current)->value > value) {
+            current = &(*current)->right;
+        } else {
+            current = &(*current)->left;
+        }
+    }
+    return 0;
+}
+
+int delete_node(Node** root_pp, int value) {
+    if (!root_pp) {
+        return 0;
+    }
+    Node* found = find_deleting(*root_pp, value);
+    if (!found) {
+        return 0;
+    }
+    int new_value = find_leaf2clear(root_pp, value);
+    found->value = new_value;
+    return 1;
+}
+
+
+int print_tree(Node* root_p) {
+    if (root_p) {
+        print_tree(root_p->right);
+        printf("%i ", root_p->value);
+        print_tree(root_p->left);
+    }
+    return 1;
+}
+
 
 int main(void) {
     int command;
@@ -124,18 +151,13 @@ int main(void) {
                 break;
             case 2:
                 scanf(" %i", &value);
-                if (!in_tree(root, value)) {
-                    printf("The entered value is not stored in the tree\n");
-                } else {
-                    int biggest = search(root, value);
-                    if (biggest == INT_MIN) {
-                        printf("The entered value is minimal\n");
-                    } else {
-                        printf("%i\n", biggest);
-                    }
-                }
+                delete_node(&root, value);
                 break;
             case 3:
+                print_tree(root);
+                printf("\n");
+                break;
+            case 4:
                 delete_root(&root);
                 break;
             default:
