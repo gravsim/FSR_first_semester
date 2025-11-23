@@ -59,17 +59,15 @@ Node* find_deleting(Node* root_p, int value) {
 
 int find_leaf2clear(Node** root_pp, int value) {
     Node** current = root_pp;
-    Node** parent;
     int return_value;
     while (*current) {
-        parent = current;
         if (((*current)->value > value && !(*current)->right)
             || ((*current)->value < value && !(*current)->left)) {
             return_value = (*current)->value;
-            *parent = NULL;
+            *current = NULL;
             free(*current);
             return return_value;
-        }
+            }
         if ((*current)->value > value) {
             current = &(*current)->right;
         } else {

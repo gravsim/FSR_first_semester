@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <limits.h>
 
 
 typedef struct Node {
@@ -79,6 +78,7 @@ int delete_root(Node** root_pp) {
     return 1;
 }
 
+
 Node* find_deleting(Node* root_p, int value) {
     Node* found = root_p;
     while (found && found->value != value) {
@@ -94,14 +94,12 @@ Node* find_deleting(Node* root_p, int value) {
 
 int find_leaf2clear(Node** root_pp, int value) {
     Node** current = root_pp;
-    Node** parent;
     int return_value;
     while (*current) {
-        parent = current;
         if (((*current)->value > value && !(*current)->right)
             || ((*current)->value < value && !(*current)->left)) {
             return_value = (*current)->value;
-            *parent = NULL;
+            *current = NULL;
             free(*current);
             return return_value;
             }
