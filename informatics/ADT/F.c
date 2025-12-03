@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 
 typedef struct Deque {
@@ -11,7 +12,7 @@ typedef struct Deque {
 
 
 int norm_index(Deque* deque, int index) {
-    return (deque->capacity + index) % deque->capacity;
+    return (index % deque->capacity + deque->capacity) % deque->capacity;
 }
 
 
@@ -35,12 +36,21 @@ void expand(Deque* deque) {
     if (!deque) {
         return;
     }
+    deque->front = norm_index(deque, deque->front);
+    deque->back = norm_index(deque, deque->back);
     int old_capacity = deque->capacity;
     deque->capacity *= 2;
-    deque->values = (int*)realloc(deque->values, deque->capacity * sizeof(int));
+    int* tmp_values = realloc(deque->values, deque->capacity * sizeof(int));
+    if (!tmp_values) {
+        return;
+    }
+    deque->values = tmp_values;
     int i;
-    for (i = 0; i < deque->front; i++) {
-        deque->values[i + old_capacity] = deque->values[i];
+    if (deque->front >= deque->back) {
+        for (i = 0; i < deque->back; i++) {
+            deque->values[i + old_capacity] = deque->values[i];
+        }
+        deque->back += old_capacity;
     }
 }
 
