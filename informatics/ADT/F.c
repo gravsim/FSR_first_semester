@@ -1,0 +1,199 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+
+typedef struct Deque {
+    int front;
+    int back;
+    int capacity;
+    int* values;
+} Deque;
+
+
+int norm_index(Deque* deque, int index) {
+    return (deque->capacity + index) % deque->capacity;
+}
+
+
+int is_full(Deque* deque) {
+    if (!deque) {
+        return 0;
+    }
+    return deque->back - deque->front == deque->capacity;
+}
+
+
+int is_empty(Deque* deque) {
+    if (!deque) {
+        return 0;
+    }
+    return deque->front == deque->back;
+}
+
+
+void expand(Deque* deque) {
+    if (!deque) {
+        return;
+    }
+    int old_capacity = deque->capacity;
+    deque->capacity *= 2;
+    deque->values = (int*)realloc(deque->values, deque->capacity * sizeof(int));
+    int i;
+    for (i = 0; i < deque->front; i++) {
+        deque->values[i + old_capacity] = deque->values[i];
+    }
+}
+
+
+int push_front(Deque* deque, int* value) {
+    if (!deque || !value) {
+        return -1;
+    }
+    if (is_full(deque)) {
+        expand(deque);
+    }
+    deque->front--;
+    deque->values[norm_index(deque, deque->front)] = *value;
+    return 0;
+}
+
+
+int push_back(Deque* deque, int* value) {
+    if (!deque || !value) {
+        return -1;
+    }
+    if (is_full(deque)) {
+        expand(deque);
+    }
+    deque->values[norm_index(deque, deque->back)] = *value;
+    deque->back++;
+    return 0;
+}
+
+
+int pop_front(Deque* deque, int* value) {
+    if (!deque || !value) {
+        return -1;
+    }
+    *value = deque->values[norm_index(deque, deque->front)];
+    deque->front++;
+    return 0;
+}
+
+
+int pop_back(Deque* deque, int* value) {
+    if (!deque || !value) {
+        return -1;
+    }
+    deque->back--;
+    *value = deque->values[norm_index(deque, deque->back)];
+    return 0;
+}
+
+
+int front(Deque* deque, int* value) {
+    if (!deque || !value) {
+        return -1;
+    }
+    *value = deque->values[norm_index(deque, deque->front)];
+    return 0;
+}
+
+
+int back(Deque* deque, int* value) {
+    if (!deque) {
+        return -1;
+    }
+    *value = deque->values[norm_index(deque, deque->back - 1)];
+    return 0;
+}
+
+
+int clear(Deque* deque) {
+    if (!deque) {
+        return -1;
+    }
+    deque->front = 0;
+    deque->back = 0;
+    return 0;
+}
+
+
+int check_deque(Deque* deque) {
+    int true_false = is_empty(deque);
+    if (true_false) {
+        printf("error\n");
+    }
+    return !true_false;
+}
+
+
+Deque* init_deque(void) {
+    Deque* deque = malloc(sizeof(Deque));
+    deque->front = 0;
+    deque->back = 0;
+    deque->capacity = 100;
+    deque->values = (int*)calloc(deque->capacity, sizeof(int));
+    return deque;
+}
+
+
+int is_str_equal(char* sample, char* command) {
+    int i = 0;
+    while (command[i] != '\0') {
+        if (command[i] != sample[i]) {
+            return 0;
+        }
+        i++;
+    }
+    return 1;
+}
+
+
+int main(void) {
+    int value;
+    char command[20];
+    Deque* deque = init_deque();
+    while (1) {
+        scanf("%s", command);
+        if (is_str_equal("push_front", command)) {
+            scanf(" %i", &value);
+            push_front(deque, &value);
+            printf("ok\n");
+        } else if (is_str_equal("push_back", command)) {
+            scanf(" %i", &value);
+            push_back(deque, &value);
+            printf("ok\n");
+        } else if (is_str_equal("pop_front", command)) {
+            if (check_deque(deque)) {
+                pop_front(deque, &value);
+                printf("%i\n", value);
+            }
+        } else if (is_str_equal("pop_back", command)) {
+            if (check_deque(deque)) {
+                pop_back(deque, &value);
+                printf("%i\n", value);
+            }
+        } else if (is_str_equal("front", command)) {
+            if (check_deque(deque)) {
+                front(deque, &value);
+                printf("%i\n", value);
+            }
+        } else if (is_str_equal("back", command)) {
+            if (check_deque(deque)) {
+                back(deque, &value);
+                printf("%i\n", value);
+            }
+        } else if (is_str_equal("size", command)) {
+            printf("%i\n", deque->back - deque->front);
+        } else if (is_str_equal("clear", command)) {
+            clear(deque);
+            printf("ok\n");
+        } else if (is_str_equal("exit", command)) {
+            free(deque->values);
+            free(deque);
+            printf("bye\n");
+            return 0;
+        }
+    }
+}

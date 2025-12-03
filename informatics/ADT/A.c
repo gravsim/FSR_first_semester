@@ -54,16 +54,9 @@ Stack* init_stack(void) {
 
 
 int bracket_equal(char bracket1, char bracket2) {
-    if (bracket1 == '(' && bracket2 == ')') {
-        return 1;
-    }
-    if (bracket1 == '[' && bracket2 == ']') {
-        return 1;
-    }
-    if (bracket1 == '{' && bracket2 == '}') {
-        return 1;
-    }
-    return 0;
+    return (bracket1 == '(' && bracket2 == ')') ||
+    (bracket1 == '[' && bracket2 == ']') ||
+    (bracket1 == '{' && bracket2 == '}');
 }
 
 
