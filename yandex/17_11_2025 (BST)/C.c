@@ -11,17 +11,14 @@ typedef struct Node {
 
 
 int in_tree(Node* root_p, int value) {
-    while (root_p) {
-        if (root_p->value == value) {
-            return 1;
-        }
+    while (root_p && root_p->value != value) {
         if (root_p->value > value) {
             root_p = root_p->right;
         } else {
             root_p = root_p->left;
         }
     }
-    return 0;
+    return !!root_p;
 }
 
 
@@ -41,53 +38,46 @@ int search(Node* root_p, int value) {
 }
 
 
-Node* find_leaf(Node* root_p, int value) {
-    Node* current = root_p;
-    while (current) {
-        if (current->value > value) {
-            if (!current->right) {
-                return current;
-            }
-            current = current->right;
-        } else {
-            if (!current->left) {
-                return current;
-            }
-            current = current->left;
-        }
-    }
-    return NULL;
-}
-
-
-int push(Node** root_pp, int value) {
+Node* new_node(int value) {
+    /*
+        Создаем новый узел.
+    */
     Node* new_node = malloc(sizeof(Node));
     new_node->value = value;
     new_node->left = NULL;
     new_node->right = NULL;
-    if (!*root_pp) {
-        *root_pp = new_node;
-        return 1;
-    }
-    Node* leaf = find_leaf(*root_pp, value);
-    if (!leaf) {
-        return 0;
-    }
-    if (leaf->value > value) {
-        leaf->right = new_node;
-    } else {
-        leaf->left = new_node;
-    }
-    return 1;
+    return new_node;
 }
 
 
-int delete_leaf(Node** leaf_pp) {
+Node* push(Node* root_p, int value) {
+    /*
+        Добавляем новый лист к дереву.
+    */
+    if (!root_p) {
+        return new_node(value);
+    }
+    if (root_p->value > value) {
+        root_p->right = push(root_p->right, value);
+    } else {
+        root_p->left = push(root_p->left, value);
+    }
+    return root_p;
+}
+
+
+int free_node(Node** leaf_pp) {
+    /*
+        Освобождаем память узлов дерева. Если есть потомки,
+        запускаем освобождение для них.
+        Не проверяем leaf_pp == NULL, т.к. это было сделано
+        до старта рекурсии для данного узла.
+    */
     if ((*leaf_pp)->left) {
-        delete_leaf(&(*leaf_pp)->left);
+        free_node(&(*leaf_pp)->left);
     }
     if ((*leaf_pp)->right) {
-        delete_leaf(&(*leaf_pp)->right);
+        free_node(&(*leaf_pp)->right);
     }
     free(*leaf_pp);
     *leaf_pp = NULL;
@@ -95,15 +85,19 @@ int delete_leaf(Node** leaf_pp) {
 }
 
 
-int delete_root(Node** root_pp) {
+int free_root(Node** root_pp) {
+    /*
+        Освобождаем память корня дерева. Если есть
+        потомки, запускаем освобождение для них.
+    */
     if (!root_pp || !*root_pp) {
-        return 1;
+        return -1;
     }
     if ((*root_pp)->left) {
-        delete_leaf(&(*root_pp)->left);
+        free_node(&(*root_pp)->left);
     }
     if ((*root_pp)->right) {
-        delete_leaf(&(*root_pp)->right);
+        free_node(&(*root_pp)->right);
     }
     free(*root_pp);
     *root_pp = NULL;
@@ -120,7 +114,7 @@ int main(void) {
         switch (command) {
             case 1:
                 scanf(" %i", &value);
-                push(&root, value);
+                root = push(root, value);
                 break;
             case 2:
                 scanf(" %i", &value);
@@ -136,12 +130,12 @@ int main(void) {
                 }
                 break;
             case 3:
-                delete_root(&root);
+                free_root(&root);
                 break;
             default:
                 break;
         }
     } while (command != 0);
-    delete_root(&root);
+    free_root(&root);
     return 0;
 }
