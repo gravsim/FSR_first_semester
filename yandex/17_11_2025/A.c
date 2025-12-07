@@ -96,41 +96,41 @@ Node* push(Node* root_p, int value) {
 }
 
 
-int free_node(Node** leaf_pp) {
+int free_node(Node* leaf_pp) {
     /*
         Освобождаем память узлов дерева. Если есть потомки,
         запускаем освобождение для них.
         Не проверяем leaf_pp == NULL, т.к. это было сделано
         до старта рекурсии для данного узла.
     */
-    if ((*leaf_pp)->left) {
-        free_node(&(*leaf_pp)->left);
+    if (leaf_pp->left) {
+        free_node(leaf_pp->left);
     }
-    if ((*leaf_pp)->right) {
-        free_node(&(*leaf_pp)->right);
+    if (leaf_pp->right) {
+        free_node(leaf_pp->right);
     }
-    free(*leaf_pp);
-    *leaf_pp = NULL;
+    free(leaf_pp);
+    leaf_pp = NULL;
     return 1;
 }
 
 
-int free_root(Node** root_pp) {
+int free_root(Node* root_pp) {
     /*
         Освобождаем память корня дерева. Если есть
         потомки, запускаем освобождение для них.
     */
-    if (!root_pp || !*root_pp) {
+    if (!root_pp) {
         return -1;
     }
-    if ((*root_pp)->left) {
-        free_node(&(*root_pp)->left);
+    if (root_pp->left) {
+        free_node(root_pp->left);
     }
-    if ((*root_pp)->right) {
-        free_node(&(*root_pp)->right);
+    if (root_pp->right) {
+        free_node(root_pp->right);
     }
-    free(*root_pp);
-    *root_pp = NULL;
+    free(root_pp);
+    root_pp = NULL;
     return 1;
 }
 
