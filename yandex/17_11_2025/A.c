@@ -11,7 +11,7 @@ typedef struct Node {
 
 Node** search_node(Node** current, int value) {
     /*
-        Ищем узел со значением value в дереве root_p.
+        Ищем узел со значением value в дереве current.
     */
     while (*current && (*current)->value != value) {
         if ((*current)->value > value) {
@@ -42,28 +42,28 @@ int delete_node(Node** node_pp) {
     if (!node_pp || !*node_pp) {
         return 0;
     }
-    Node* node_p = *node_pp;
-    if (!node_p->right && !node_p->left) {
+    Node* tmp = *node_pp;
+    if (!(*node_pp)->right && !(*node_pp)->left) {
         // Нет детей
-        free(node_p);
+        free(tmp);
         *node_pp = NULL;
         return 1;
     }
-    if (!node_p->right) {
+    if (!(*node_pp)->right) {
         // Нет только правого ребенка
-        *node_pp = node_p->left;
-        free(node_p);
+        *node_pp = (*node_pp)->left;
+        free(tmp);
         return 1;
     }
-    if (!node_p->left) {
+    if (!(*node_pp)->left) {
         // Нет только левого ребенка
-        *node_pp = node_p->right;
-        free(node_p);
+        *node_pp = (*node_pp)->right;
+        free(tmp);
         return 1;
     }
     // Есть оба ребенка
-    Node** descendant = find_right_min(&node_p->left);
-    node_p->value = (*descendant)->value;
+    Node** descendant = find_right_min(&(*node_pp)->left);
+    (*node_pp)->value = (*descendant)->value;
     return delete_node(descendant);
 }
 
@@ -96,41 +96,41 @@ Node* push(Node* root_p, int value) {
 }
 
 
-int free_node(Node* leaf_pp) {
+int free_node(Node** leaf_pp) {
     /*
         Освобождаем память узлов дерева. Если есть потомки,
         запускаем освобождение для них.
         Не проверяем leaf_pp == NULL, т.к. это было сделано
         до старта рекурсии для данного узла.
     */
-    if (leaf_pp->left) {
-        free_node(leaf_pp->left);
+    if ((*leaf_pp)->left) {
+        free_node(&(*leaf_pp)->left);
     }
-    if (leaf_pp->right) {
-        free_node(leaf_pp->right);
+    if ((*leaf_pp)->right) {
+        free_node(&(*leaf_pp)->right);
     }
-    free(leaf_pp);
-    leaf_pp = NULL;
+    free(*leaf_pp);
+    *leaf_pp = NULL;
     return 1;
 }
 
 
-int free_root(Node* root_pp) {
+int free_root(Node** root_pp) {
     /*
         Освобождаем память корня дерева. Если есть
         потомки, запускаем освобождение для них.
     */
-    if (!root_pp) {
+    if (!root_pp || !*root_pp) {
         return -1;
     }
-    if (root_pp->left) {
-        free_node(root_pp->left);
+    if ((*root_pp)->left) {
+        free_node(&(*root_pp)->left);
     }
-    if (root_pp->right) {
-        free_node(root_pp->right);
+    if ((*root_pp)->right) {
+        free_node(&(*root_pp)->right);
     }
-    free(root_pp);
-    root_pp = NULL;
+    free(*root_pp);
+    *root_pp = NULL;
     return 1;
 }
 
