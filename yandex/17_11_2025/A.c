@@ -9,117 +9,105 @@ typedef struct Node {
 } Node;
 
 
-int search(Node* root_p, int value) {
-    Node* current = root_p;
-    while (current && current->value != value) {
-        if (current->value > value) {
-            current = current->right;
-        } else {
-            current = current->left;
-        }
-    }
-    if (current) {
-        return 1;
-    }
-    return 0;
-}
-
-
-Node* find_leaf(Node* root_p, int value) {
-    Node* current = root_p;
-    while (current) {
-        if (current->value > value) {
-            if (!current->right) {
-                return current;
-            }
-            current = current->right;
-        } else {
-            if (!current->left) {
-                return current;
-            }
-            current = current->left;
-        }
-    }
-    return NULL;
-}
-
-
-Node* find_deleting(Node* root_p, int value) {
-    Node* found = root_p;
-    while (found && found->value != value) {
-        if (found->value > value) {
-            found = found->right;
-        } else {
-            found = found->left;
-        }
-    }
-    return found;
-}
-
-
-int find_leaf2clear(Node** root_pp, int value) {
-    Node** current = root_pp;
-    int return_value;
-    while (*current) {
-        if (((*current)->value > value && !(*current)->right)
-            || ((*current)->value < value && !(*current)->left)) {
-            return_value = (*current)->value;
-            *current = NULL;
-            free(*current);
-            return return_value;
-            }
+Node** search_node(Node** current, int value) {
+    /*
+        Ищем узел со значением value в дереве root_p.
+    */
+    while (*current && (*current)->value != value) {
         if ((*current)->value > value) {
             current = &(*current)->right;
         } else {
             current = &(*current)->left;
         }
     }
-    return 0;
+    return current;
 }
 
 
-int delete_node(Node** root_pp, int value) {
-    if (!root_pp) {
-        return 0;
+Node** find_right_min(Node** node) {
+    /*
+        Ищем узел с минимальным значением в дереве с корнем node.
+    */
+    if (!*node) {
+        return NULL;
     }
-    Node* found = find_deleting(*root_pp, value);
-    if (!found) {
-        return 0;
+    while ((*node)->right) {
+        node = &(*node)->right;
     }
-    int new_value = find_leaf2clear(root_pp, value);
-    found->value = new_value;
-    return 1;
+    return node;
 }
 
 
-int push(Node** root_pp, int value) {
+int delete_node(Node** node_pp) {
+    if (!node_pp || !*node_pp) {
+        return 0;
+    }
+    Node* node_p = *node_pp;
+    if (!node_p->right && !node_p->left) {
+        // Нет детей
+        free(node_p);
+        *node_pp = NULL;
+        return 1;
+    }
+    if (!node_p->right) {
+        // Нет только правого ребенка
+        *node_pp = node_p->left;
+        free(node_p);
+        return 1;
+    }
+    if (!node_p->left) {
+        // Нет только левого ребенка
+        *node_pp = node_p->right;
+        free(node_p);
+        return 1;
+    }
+    // Есть оба ребенка
+    Node** descendant = find_right_min(&node_p->left);
+    node_p->value = (*descendant)->value;
+    return delete_node(descendant);
+}
+
+
+Node* new_node(int value) {
+    /*
+        Создаем новый узел.
+    */
     Node* new_node = malloc(sizeof(Node));
     new_node->value = value;
     new_node->left = NULL;
     new_node->right = NULL;
-    if (!*root_pp) {
-        *root_pp = new_node;
-        return 1;
-    }
-    Node* leaf = find_leaf(*root_pp, value);
-    if (!leaf) {
-        return 0;
-    }
-    if (leaf->value > value) {
-        leaf->right = new_node;
-    } else {
-        leaf->left = new_node;
-    }
-    return 1;
+    return new_node;
 }
 
 
-int delete_leaf(Node** leaf_pp) {
+Node* push(Node* root_p, int value) {
+    /*
+        Добавляем новый лист к дереву.
+    */
+    if (!root_p) {
+        return new_node(value);
+    }
+    if (root_p->value > value) {
+        root_p->right = push(root_p->right, value);
+    } else {
+        root_p->left = push(root_p->left, value);
+    }
+    return root_p;
+}
+
+
+int free_node(Node** leaf_pp) {
+    /*
+        Освобождаем память узлов дерева. Если есть потомки,
+        запускаем освобождение для них.
+        Не проверяем leaf_pp == NULL, т.к. это было сделано
+        до старта рекурсии для данного узла.
+    */
     if ((*leaf_pp)->left) {
-        delete_leaf(&(*leaf_pp)->left);
+        free_node(&(*leaf_pp)->left);
     }
     if ((*leaf_pp)->right) {
-        delete_leaf(&(*leaf_pp)->right);
+        free_node(&(*leaf_pp)->right);
     }
     free(*leaf_pp);
     *leaf_pp = NULL;
@@ -127,15 +115,19 @@ int delete_leaf(Node** leaf_pp) {
 }
 
 
-int delete_root(Node** root_pp) {
+int free_root(Node** root_pp) {
+    /*
+        Освобождаем память корня дерева. Если есть
+        потомки, запускаем освобождение для них.
+    */
     if (!root_pp || !*root_pp) {
-        return 1;
+        return -1;
     }
     if ((*root_pp)->left) {
-        delete_leaf(&(*root_pp)->left);
+        free_node(&(*root_pp)->left);
     }
     if ((*root_pp)->right) {
-        delete_leaf(&(*root_pp)->right);
+        free_node(&(*root_pp)->right);
     }
     free(*root_pp);
     *root_pp = NULL;
@@ -152,20 +144,26 @@ int main(void) {
         switch (command) {
             case 1:
                 scanf(" %i", &value);
-                printf("%i\n", push(&root, value));
+                root = push(root, value);
+                printf("1\n");
                 break;
             case 2:
                 scanf(" %i", &value);
-                printf("%i\n", search(root, value));
+                if (*search_node(&root, value)) {
+                    printf("1\n");
+                } else {
+                    printf("0\n");
+                }
                 break;
             case 3:
                 scanf(" %i", &value);
-                printf("%i\n", delete_node(&root, value));
+                Node** found = search_node(&root, value);
+                printf("%i\n", delete_node(found));
                 break;
             default:
                 break;
         }
     } while (command != 0);
-    delete_root(&root);
+    free_root(&root);
     return 0;
 }
