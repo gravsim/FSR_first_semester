@@ -28,12 +28,9 @@ Node* push(Node* root_p, int value) {
     if (!root_p) {
         return new_node(value);
     }
-    if (value == root_p->value) {
-        return root_p;
-    }
     if (root_p->value < value) {
         root_p->right = push(root_p->right, value);
-    } else {
+    } else if (root_p->value > value) {
         root_p->left = push(root_p->left, value);
     }
     return root_p;

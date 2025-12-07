@@ -4,65 +4,57 @@
 
 typedef struct Node {
     int value;
+    int subtree_size;
     struct Node* left;
     struct Node* right;
 } Node;
 
 
-Node** search_node_by_index(Node** current, int* sum, int index) {
-    /*
-        Ищем узел с индексом index в дереве current.
-    */
-    // printf("FINDING");
-    if (!current || !*current) {
-        return NULL;
+int node_size(Node* node) {
+    if (node) {
+        return node->subtree_size;
     }
-    if ((*current)->right) {
-        // Ищем в правом поддереве.
-        Node** right_result = search_node_by_index(&(*current)->right, sum, index);
-        if (right_result) {
-            return right_result;
-        }
-    }
-    if (*sum == index) {
-        // Если индекс элемента совпал с нужным, возвращаем его.
-        return current;
-    }
-    (*sum)++;
-    if ((*current)->left) {
-        // Ищем в левом поддереве.
-        return search_node_by_index(&(*current)->left, sum, index);
-    }
-    // Ничего не нашли.
-    return NULL;
+    return 0;
 }
 
 
-Node** search_node_by_value(Node** current, int* sum, int value) {
-    /*
-        Ищем узел со значением value в дереве current.
-    */
-    // printf("FINDING");
-    if (!current || !*current) {
-        return NULL;
-    }
-    if ((*current)->right) {
-        // Ищем в правом поддереве.
-        Node** right_result = search_node_by_value(&(*current)->right, sum, value);
-        if (right_result) {
-            return right_result;
+void update_size(Node* node) {
+    node->subtree_size = 1 + node_size(node->left) + node_size(node->right);
+}
+
+
+int bigger_than(Node* root_p, int value) {
+    int count = 0;
+    Node* current = root_p;
+    while (current) {
+        if (current->value > value) {
+            count += 1 + node_size(current->right);
+            current = current->left;
+        } else {
+            current = current->right;
         }
     }
-    if ((*current)->value == value) {
-        // Если индекс элемента совпал с нужным, возвращаем его.
-        return current;
+    return count;
+}
+
+
+Node** search_node_by_index(Node** root_p, int index) {
+    /*
+        Ищем узел с индексом index в дереве current.
+    */
+    Node** current = root_p;
+    while (*current) {
+        int right_size = node_size((*current)->right);
+        if (right_size == index) {
+            return current;
+        }
+        if (index > right_size) {
+            index -= 1 + right_size;
+            current = &(*current)->left;
+        } else {
+            current = &(*current)->right;
+        }
     }
-    (*sum)++;
-    if ((*current)->left) {
-        // Ищем в левом поддереве.
-        return search_node_by_value(&(*current)->left, sum, value);
-    }
-    // Ничего не нашли.
     return NULL;
 }
 
@@ -75,6 +67,7 @@ Node* new_node(int value) {
     new_node->value = value;
     new_node->left = NULL;
     new_node->right = NULL;
+    new_node->subtree_size = 1;
     return new_node;
 }
 
@@ -86,14 +79,12 @@ Node* push(Node* root_p, int value) {
     if (!root_p) {
         return new_node(value);
     }
-    if (value == root_p->value) {
-        return root_p;
-    }
     if (root_p->value < value) {
         root_p->right = push(root_p->right, value);
-    } else {
+    } else if (root_p->value > value) {
         root_p->left = push(root_p->left, value);
     }
+    update_size(root_p);
     return root_p;
 }
 
@@ -126,21 +117,23 @@ int delete_node(Node** node_pp) {
     if (!(*node_pp)->right) {
         // Нет только правого ребенка
         *node_pp = (*node_pp)->left;
+        update_size(*node_pp);
         free(tmp);
         return 1;
     }
     if (!(*node_pp)->left) {
         // Нет только левого ребенка
         *node_pp = (*node_pp)->right;
+        update_size(*node_pp);
         free(tmp);
         return 1;
     }
     // Есть оба ребенка
-    Node** descendant = find_min(&(*node_pp)->right);
-    (*node_pp)->value = (*descendant)->value;
-    return delete_node(descendant);
+    Node** minimal = find_min(&(*node_pp)->right);
+    (*node_pp)->value = (*minimal)->value;
+    update_size(*node_pp);
+    return delete_node(minimal);
 }
-
 
 
 int free_node(Node** leaf_pp) {
@@ -185,10 +178,9 @@ int free_root(Node** root_pp) {
 int main(void) {
     int command;
     int height;
-    int index;
+    int index2remove;
     Node* root = NULL;
     int N;
-    int sum;
     Node** found;
     scanf("%i", &N);
     int i;
@@ -198,15 +190,14 @@ int main(void) {
             case 1:
                 scanf(" %i", &height);
                 root = push(root, height);
-                sum = 0;
-                search_node_by_value(&root, &sum, height);
-                printf("%i\n", sum);
+                printf("%i\n", bigger_than(root, height));
                 break;
             case 2:
-                scanf(" %i", &index);
-                sum = 0;
-                found = search_node_by_index(&root, &sum, index);
-                delete_node(found);
+                scanf(" %i", &index2remove);
+                found = search_node_by_index(&root, index2remove);
+                if (found) {
+                    delete_node(found);
+                }
                 break;
             default:
                 break;
