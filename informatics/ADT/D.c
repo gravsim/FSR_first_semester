@@ -134,21 +134,21 @@ int main(void) {
     while (1) {
         scanf("%s", command);
         if (is_str_equal("push", command)) {
-            scanf(" %i", &value);
+            scanf(" %d", &value);
             push(queue, &value);
             printf("ok\n");
         } else if (is_str_equal("pop", command)) {
             if (check_queue(queue)) {
                 pop(queue, &value);
-                printf("%i\n", value);
+                printf("%d\n", value);
             }
         } else if (is_str_equal("front", command)) {
             if (check_queue(queue)) {
                 front(queue, &value);
-                printf("%i\n", value);
+                printf("%d\n", value);
             }
         } else if (is_str_equal("size", command)) {
-            printf("%i\n", queue->back - queue->front);
+            printf("%d\n", queue->back - queue->front);
         } else if (is_str_equal("clear", command)) {
             clear(queue);
             printf("ok\n");

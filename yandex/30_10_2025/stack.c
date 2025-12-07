@@ -69,7 +69,7 @@ int main(void) {
     stack->max_size = 100;
     stack->values = (char*)calloc(stack->max_size, sizeof(char));
     do {
-        scanf("%i", &command);
+        scanf("%d", &command);
         switch (command) {
             case 1:
                 scanf(" %c", &value);
@@ -88,7 +88,7 @@ int main(void) {
                 break;
             case 4:
                 is_empty(stack, &true_false);
-                printf("%i\n", true_false);
+                printf("%d\n", true_false);
                 break;
             case 5:
                 clear(stack);

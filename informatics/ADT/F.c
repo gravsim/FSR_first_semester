@@ -166,35 +166,35 @@ int main(void) {
     while (1) {
         scanf("%s", command);
         if (is_str_equal("push_front", command)) {
-            scanf(" %i", &value);
+            scanf(" %d", &value);
             push_front(deque, &value);
             printf("ok\n");
         } else if (is_str_equal("push_back", command)) {
-            scanf(" %i", &value);
+            scanf(" %d", &value);
             push_back(deque, &value);
             printf("ok\n");
         } else if (is_str_equal("pop_front", command)) {
             if (check_deque(deque)) {
                 pop_front(deque, &value);
-                printf("%i\n", value);
+                printf("%d\n", value);
             }
         } else if (is_str_equal("pop_back", command)) {
             if (check_deque(deque)) {
                 pop_back(deque, &value);
-                printf("%i\n", value);
+                printf("%d\n", value);
             }
         } else if (is_str_equal("front", command)) {
             if (check_deque(deque)) {
                 front(deque, &value);
-                printf("%i\n", value);
+                printf("%d\n", value);
             }
         } else if (is_str_equal("back", command)) {
             if (check_deque(deque)) {
                 back(deque, &value);
-                printf("%i\n", value);
+                printf("%d\n", value);
             }
         } else if (is_str_equal("size", command)) {
-            printf("%i\n", deque->back - deque->front);
+            printf("%d\n", deque->back - deque->front);
         } else if (is_str_equal("clear", command)) {
             clear(deque);
             printf("ok\n");

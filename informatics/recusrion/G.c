@@ -29,11 +29,11 @@ int main(void) {
     long pointer;
     long k;
     long deleted = 0;
-    scanf("%li", &N);
+    scanf("%ld", &N);
     Child** numbers = (Child**)calloc(N + 1, sizeof(Child*));
     long* dad_ids = (long*)calloc(N + 1, sizeof(long));
     for (i = 1; i <= N; i++) {
-        scanf("%li %li", &number, &pointer);
+        scanf("%ld %ld", &number, &pointer);
         numbers[i] = (Child*)malloc(sizeof(Child));
         numbers[i]->children = (Child**)calloc(N + 1, sizeof(Child*));
         numbers[i]->family_size = 0;
@@ -49,7 +49,7 @@ int main(void) {
             }
         }
     }
-    scanf("%li", &k);
+    scanf("%ld", &k);
     Child* target = NULL;
     i = 1;
     while (i <= N && !target) {
@@ -59,7 +59,7 @@ int main(void) {
         i++;
     }
     kill_children(target, &deleted);
-    printf("%li", deleted);
+    printf("%ld", deleted);
     for (i = 1; i <= N; i++) {
         if (numbers[i]) {
             free(numbers[i]->children);

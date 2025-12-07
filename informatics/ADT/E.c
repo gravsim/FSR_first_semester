@@ -173,7 +173,7 @@ int print_results(long long Q, long long* answers1, long long* answers2) {
     }
     long long i;
     for (i = 0; i < Q; i++) {
-        printf("%lli %lli\n", answers1[i], answers2[i]);
+        printf("%lld %lld\n", answers1[i], answers2[i]);
     }
     return 1;
 }
@@ -208,7 +208,7 @@ int read_teams(Game* game) {
     long long i;
     long long value;
     for (i = 0; i < game->teams_number; i++) {
-        scanf("%lli", &value);
+        scanf("%lld", &value);
         push(game->queue, &value);
     }
     return 1;
@@ -221,7 +221,7 @@ int read_rhymes(long long Q, long long* rhymes) {
     }
     long long i;
     for (i = 0; i < Q; i++) {
-        scanf("%lli", &rhymes[i]);
+        scanf("%lld", &rhymes[i]);
     }
     return 1;
 }
@@ -314,10 +314,10 @@ int main(void) {
     Game* game = malloc(sizeof(Game));
     game->max_team_index = 0;
     game->games_played = 0;
-    scanf("%lli", &game->teams_number);
+    scanf("%lld", &game->teams_number);
     game->queue = init_queue(game->teams_number);
     read_teams(game);
-    scanf("%lli", &Q);
+    scanf("%lld", &Q);
     /*
         * rhymes - массив со считалками.
         * indices - массив индексов, который мы отсортируем вместе с rhymes,

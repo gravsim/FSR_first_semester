@@ -83,7 +83,7 @@ int print_tree(Node* root_p) {
     if (root_p) {
         print_tree(root_p->left);
         if (root_p->left && root_p->right) {
-            printf("%i\n", root_p->value);
+            printf("%d\n", root_p->value);
         }
         print_tree(root_p->right);
     }
@@ -94,10 +94,10 @@ int print_tree(Node* root_p) {
 int main(void) {
     int value;
     Node* root = NULL;
-    scanf("%i", &value);
+    scanf("%d", &value);
     while (value != 0) {
         root = push(root, value);
-        scanf("%i", &value);
+        scanf("%d", &value);
     }
     print_tree(root);
     free_root(&root);

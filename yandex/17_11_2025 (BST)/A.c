@@ -140,15 +140,15 @@ int main(void) {
     int value;
     Node* root = NULL;
     do {
-        scanf("%i", &command);
+        scanf("%d", &command);
         switch (command) {
             case 1:
-                scanf(" %i", &value);
+                scanf(" %d", &value);
                 root = push(root, value);
                 printf("1\n");
                 break;
             case 2:
-                scanf(" %i", &value);
+                scanf(" %d", &value);
                 if (*search_node(&root, value)) {
                     printf("1\n");
                 } else {
@@ -156,9 +156,9 @@ int main(void) {
                 }
                 break;
             case 3:
-                scanf(" %i", &value);
+                scanf(" %d", &value);
                 Node** found = search_node(&root, value);
-                printf("%i\n", delete_node(found));
+                printf("%d\n", delete_node(found));
                 break;
             default:
                 break;

@@ -32,10 +32,10 @@ void quick_sort(long long array[], long long low, long long high) {
 
 
 void read_array(long long *size, long long array[]) {
-    scanf("%lli", size);
+    scanf("%lld", size);
     long long i;
     for (i = 0; i < *size; i++) {
-        scanf("%lli", &array[i]);
+        scanf("%lld", &array[i]);
     }
 }
 

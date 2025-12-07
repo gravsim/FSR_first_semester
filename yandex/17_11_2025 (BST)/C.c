@@ -110,14 +110,14 @@ int main(void) {
     int value;
     Node* root = NULL;
     do {
-        scanf("%i", &command);
+        scanf("%d", &command);
         switch (command) {
             case 1:
-                scanf(" %i", &value);
+                scanf(" %d", &value);
                 root = push(root, value);
                 break;
             case 2:
-                scanf(" %i", &value);
+                scanf(" %d", &value);
                 if (!in_tree(root, value)) {
                     printf("The entered value is not stored in the tree\n");
                 } else {
@@ -125,7 +125,7 @@ int main(void) {
                     if (biggest == INT_MIN) {
                         printf("The entered value is minimal\n");
                     } else {
-                        printf("%i\n", biggest);
+                        printf("%d\n", biggest);
                     }
                 }
                 break;

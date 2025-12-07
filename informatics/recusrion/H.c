@@ -17,7 +17,7 @@ void print_scales(int size, int* scales) {
     }
     int i = 0;
     while (i < size) {
-        printf("%i ", scales[i]);
+        printf("%d ", scales[i]);
         i++;
     }
     printf("\n");
@@ -54,7 +54,7 @@ int put_on_sides(int N,
 int main(void) {
     int K_weight;
     int N;
-    scanf("%i %i", &K_weight, &N);
+    scanf("%d %d", &K_weight, &N);
     int* weights = (int*)calloc(N, sizeof(int));
     struct Scales* scales = (struct Scales*)malloc(sizeof(struct Scales));
     scales->left_weights = (int*)calloc(N, sizeof(int));
@@ -63,7 +63,7 @@ int main(void) {
     scales->right_size = 0;
     int i;
     for (i = 0; i < N; i++) {
-        scanf("%i", &weights[i]);
+        scanf("%d", &weights[i]);
     }
     if (put_on_sides(N, 0, weights, scales, -K_weight)) {
         print_scales(scales->right_size, scales->right_weights);

@@ -113,42 +113,42 @@ int main(void) {
     int value;
     Deque* deque = init_deque();
     do {
-        scanf("%i", &command);
+        scanf("%d", &command);
         switch (command) {
             case 1:
-                scanf(" %i", &value);
+                scanf(" %d", &value);
                 push_front(deque, &value);
                 break;
             case 2:
-                scanf(" %i", &value);
+                scanf(" %d", &value);
                 push_back(deque, &value);
                 break;
             case 3:
                 if (check_deque(deque)) {
                     pop_front(deque, &value);
-                    printf("%i\n", value);
+                    printf("%d\n", value);
                 }
                 break;
             case 4:
                 if (check_deque(deque)) {
                     pop_back(deque, &value);
-                    printf("%i\n", value);
+                    printf("%d\n", value);
                 }
                 break;
             case 5:
                 if (check_deque(deque)) {
                     front(deque, &value);
-                    printf("%i\n", value);
+                    printf("%d\n", value);
                 }
                 break;
             case 6:
                 if (check_deque(deque)) {
                     back(deque, &value);
-                    printf("%i\n", value);
+                    printf("%d\n", value);
                 }
                 break;
             case 7:
-                printf("%i\n", is_empty(deque));
+                printf("%d\n", is_empty(deque));
                 break;
             case 8:
                 clear(deque);

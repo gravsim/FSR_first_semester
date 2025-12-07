@@ -138,7 +138,7 @@ int free_root(Node** root_pp) {
 int print_tree(Node* root_p) {
     if (root_p) {
         print_tree(root_p->right);
-        printf("%i ", root_p->value);
+        printf("%d ", root_p->value);
         print_tree(root_p->left);
     }
     return 1;
@@ -150,14 +150,14 @@ int main(void) {
     int value;
     Node* root = NULL;
     do {
-        scanf("%i", &command);
+        scanf("%d", &command);
         switch (command) {
             case 1:
-                scanf(" %i", &value);
+                scanf(" %d", &value);
                 root = push(root, value);
                 break;
             case 2:
-                scanf(" %i", &value);
+                scanf(" %d", &value);
                 Node** found = search_node(&root, value);
                 delete_node(found);
                 break;

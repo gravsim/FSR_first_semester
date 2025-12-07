@@ -131,26 +131,26 @@ int main(void) {
     Heap* heap;
     init_heap(&heap);
     do {
-        scanf("%i", &command);
+        scanf("%d", &command);
         switch (command) {
             case 1:
-                scanf(" %i", &value);
+                scanf(" %d", &value);
                 push(heap, value);
                 break;
             case 2:
                 if (check_heap(heap)) {
                     get_maximum(heap, &value);
-                    printf("%i\n", value);
+                    printf("%d\n", value);
                 }
                 break;
             case 3:
                 if (check_heap(heap)) {
                     pop_maximum(heap, &value);
-                    printf("%i\n", value);
+                    printf("%d\n", value);
                 }
                 break;
             case 4:
-                scanf(" %i %i", &old, &new);
+                scanf(" %d %d", &old, &new);
                 if (check_heap(heap)) {
                     change(heap, old, new);
                 }

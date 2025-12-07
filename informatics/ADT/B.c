@@ -86,10 +86,10 @@ int main(void) {
     int value;
     int answer = 1;
     int i = 0;
-    scanf("%i %i %i", &N, &K, &P);
+    scanf("%d %d %d", &N, &K, &P);
     Barge* barge = init_barge(K);
     while (answer && i < N) {
-        scanf(" %c %i %i", &action, &cargo_index, &fuel_type);
+        scanf(" %c %d %d", &action, &cargo_index, &fuel_type);
         cargo_index--;
         switch (action) {
             case '+':
@@ -118,7 +118,7 @@ int main(void) {
     if (answer == 0 || barge->boxes_number > 0) {
         printf("Error");
     } else {
-        printf("%i", barge->max_boxes);
+        printf("%d", barge->max_boxes);
     }
     for (i = 0; i < K; i++) {
         free(barge->cargo_boxes[i]->values);

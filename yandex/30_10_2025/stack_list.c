@@ -80,7 +80,7 @@ int main(void) {
     struct Stack* stack = (struct Stack*)malloc(sizeof(struct Stack));
     stack->beg = NULL;
     do {
-        scanf("%i", &command);
+        scanf("%d", &command);
         switch (command) {
             case 1:
                 scanf(" %c", &value);
@@ -99,7 +99,7 @@ int main(void) {
                 break;
             case 4:
                 is_empty(stack, &true_false);
-                printf("%i\n", true_false);
+                printf("%d\n", true_false);
                 break;
             case 5:
                 clear(stack);
