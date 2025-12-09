@@ -163,8 +163,8 @@ int main(void) {
     int value;
     char command[20];
     Deque* deque = init_deque();
-    while (1) {
-        scanf("%s", command);
+    scanf("%s", command);
+    while (!is_str_equal("exit", command)) {
         if (is_str_equal("push_front", command)) {
             scanf(" %d", &value);
             push_front(deque, &value);
@@ -198,11 +198,11 @@ int main(void) {
         } else if (is_str_equal("clear", command)) {
             clear(deque);
             printf("ok\n");
-        } else if (is_str_equal("exit", command)) {
-            free(deque->values);
-            free(deque);
-            printf("bye\n");
-            return 0;
         }
+        scanf("%s", command);
     }
+    free(deque->values);
+    free(deque);
+    printf("bye\n");
+    return 0;
 }

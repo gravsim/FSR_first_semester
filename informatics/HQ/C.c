@@ -89,6 +89,7 @@ int main(void) {
     scanf("%d", &N);
     int value;
     Heap* heap;
+    int index;
     init_heap(&heap);
     int i;
     for (i = 0; i < N; i++) {
@@ -96,7 +97,8 @@ int main(void) {
         push(heap, value);
     }
     for (i = 0; i < N - 1; i++) {
-        printf("%d %d\n", pop_maximum(heap, &value), value);
+        index = pop_maximum(heap, &value);
+        printf("%d %d\n", index, value);
     }
     free(heap->values);
     free(heap);
