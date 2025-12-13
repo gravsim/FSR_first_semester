@@ -2,24 +2,24 @@
 #include <stdlib.h>
 
 
-int** allocate_tril(int size) {
-    int** matrix = calloc(size, sizeof(int*));
+char** allocate_tril(int size) {
+    char** matrix = calloc(size, sizeof(char*));
     int i;
     for (i = 0; i < size; i++) {
-        matrix[i] = calloc(size, sizeof(int));
+        matrix[i] = calloc(size - i, sizeof(char));
     }
     return matrix;
 }
 
 
-int copy_ways(int** array, int size, int in, int out) {
+int copy_ways(char** array, int size, int in, int out) {
     if (!array || out >= size || in >= size) {
         return -1;
     }
     int k;
-    for (k = out + 1; k < size; k++) {
+    for (k = 1; k < size - out; k++) {
         if (array[out][k] == 1) {
-            array[in][k] = 1;
+            array[in][k + (out - in)] = 1;
         }
     }
     return 1;
@@ -34,34 +34,36 @@ int main(void) {
     int j;
     int k;
     int answer = 1;
-    int** red_reached = allocate_tril(N);
-    int** blue_reached = allocate_tril(N);
-    i = 0;
-    while (i < N - 1) {
+    char** red_reached = allocate_tril(N);
+    char** blue_reached = allocate_tril(N);
+    for (i = 0; i < N - 1; i++) {
         scanf("%s", connections);
         for (j = 0; j < N - 1 - i; j++) {
             if (connections[j] == 'R') {
-                red_reached[i][i + j + 1] = 1;
+                red_reached[i][j + 1] = 1;
             } else if (connections[j] == 'B') {
-                blue_reached[i][i + j + 1] = 1;
+                blue_reached[i][j + 1] = 1;
             }
         }
-        i++;
     }
-    for (i = N - 1; i >= 0; i--) {
-        for (j = i + 1; j < N; j++) {
+    i = N - 1;
+    while (answer == 1 && i >= 0) {
+        for (j = 1; j < N - i; j++) {
             if (red_reached[i][j] == 1) {
-                copy_ways(red_reached, N, i, j);
+                copy_ways(red_reached, N, i, i + j);
             }
             if (blue_reached[i][j] == 1) {
-                copy_ways(blue_reached, N, i, j);
+                copy_ways(blue_reached, N, i, i + j);
             }
         }
-        for (k = i + 1; k < N; k++) {
+        k = 1;
+        while (answer == 1 && k < N - i) {
             if (red_reached[i][k] == 1 && blue_reached[i][k] == 1) {
                 answer = 0;
             }
+            k++;
         }
+        i--;
     }
     if (answer) {
         printf("YES");
