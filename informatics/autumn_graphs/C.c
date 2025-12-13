@@ -2,85 +2,78 @@
 #include <stdlib.h>
 
 
-
-int print_array(char** array, int size) {
-    if (!array || !*array) {
-        return -1;
-    }
-    int i, j;
-    for (i = 0; i < size; i++) {
-        for (j = 0; j < size; j++) {
-            printf("%c ", array[i][j]);
-        }
-        printf("\n");
-    }
-    return 1;
-}
-
-
-
-int print_array2(int** array, int size) {
-    if (!array || !*array) {
-        return -1;
-    }
+int** allocate_tril(int size) {
+    int** matrix = calloc(size, sizeof(int*));
     int i;
     for (i = 0; i < size; i++) {
-        printf("(R:%d B:%d)\n", array[i][0], array[i][1]);
+        matrix[i] = calloc(size, sizeof(int));
+    }
+    return matrix;
+}
+
+
+int copy_ways(int** array, int size, int in, int out) {
+    if (!array || out >= size || in >= size) {
+        return -1;
+    }
+    int k;
+    for (k = out + 1; k < size; k++) {
+        if (array[out][k] == 1) {
+            array[in][k] = 1;
+        }
     }
     return 1;
 }
-
 
 
 int main(void) {
     int N;
     scanf("%d", &N);
-    char** connections = calloc(N - 1, sizeof(char*));
-    int** ways = calloc(N - 1, sizeof(int*));
+    char* connections = calloc(N, sizeof(char));
     int i;
     int j;
     int k;
     int answer = 1;
-    for (i = 0; i < N - 1; i++) {
-        connections[i] = calloc(N - 1, sizeof(char));
-    }
-    for (i = 0; i < N - 1; i++) {
-        ways[i] = calloc(2, sizeof(int));
-    }
-    for (i = 0; i < N - 1; i++) {
-        scanf("%s", connections[i] + i);
-    }
-    // print_array(connections, N - 1);
-    for (i = 0; i < N - 1; i++) {
-        for (j = 0; j <= i; j++) {
-            k = 0;
-            while (k + j < i && connections[k][j + k] == connections[0][j]) {
-                k++;
-            }
-            if (connections[k][j + k] == connections[0][j]) {
-                if (connections[0][j] == 'R') {
-                    ways[i][0] = 1;
-                } else if (connections[0][j] == 'B') {
-                    ways[i][1] = 1;
-                }
+    int** red_reached = allocate_tril(N);
+    int** blue_reached = allocate_tril(N);
+    i = 0;
+    while (i < N - 1) {
+        scanf("%s", connections);
+        for (j = 0; j < N - 1 - i; j++) {
+            if (connections[j] == 'R') {
+                red_reached[i][i + j + 1] = 1;
+            } else if (connections[j] == 'B') {
+                blue_reached[i][i + j + 1] = 1;
             }
         }
-
+        i++;
     }
-    for (i = 0; i < N - 1; i++) {
-        if (ways[i][0] == 1 && ways[i][1] == 1) {
-            answer = 0;
+    for (i = N - 1; i >= 0; i--) {
+        for (j = i + 1; j < N; j++) {
+            if (red_reached[i][j] == 1) {
+                copy_ways(red_reached, N, i, j);
+            }
+            if (blue_reached[i][j] == 1) {
+                copy_ways(blue_reached, N, i, j);
+            }
+        }
+        for (k = i + 1; k < N; k++) {
+            if (red_reached[i][k] == 1 && blue_reached[i][k] == 1) {
+                answer = 0;
+            }
         }
     }
-    // print_array2(ways, N - 1);
     if (answer) {
         printf("YES");
     } else {
         printf("NO");
     }
-    for (i = 0; i < N - 1; i++) {
-        free(connections[i]);
-    }
     free(connections);
+    for (i = 0; i < N; i++) {
+        free(red_reached[i]);
+        free(blue_reached[i]);
+    }
+    free(red_reached);
+    free(blue_reached);
     return 0;
 }
