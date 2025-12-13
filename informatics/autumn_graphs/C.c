@@ -17,9 +17,9 @@ int copy_ways(char** array, int size, int in, int out) {
         return -1;
     }
     int k;
-    for (k = 1; k < size - out; k++) {
-        if (array[out][k] == 1) {
-            array[in][k + (out - in)] = 1;
+    for (k = 1; k < size - (in + out); k++) {
+        if (array[in + out][k] == 1) {
+            array[in][k + out] = 1;
         }
     }
     return 1;
@@ -50,10 +50,10 @@ int main(void) {
     while (answer == 1 && i >= 0) {
         for (j = 1; j < N - i; j++) {
             if (red_reached[i][j] == 1) {
-                copy_ways(red_reached, N, i, i + j);
+                copy_ways(red_reached, N, i, j);
             }
             if (blue_reached[i][j] == 1) {
-                copy_ways(blue_reached, N, i, i + j);
+                copy_ways(blue_reached, N, i, j);
             }
         }
         k = 1;
