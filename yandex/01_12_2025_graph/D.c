@@ -40,7 +40,7 @@ int main(void) {
     int answer = 1;
     int* borders = calloc(V + 1, sizeof(int));
     int* vertices = calloc(V + 1, sizeof(int));
-    int* weights = calloc(V + 1, sizeof(int));
+    int* weights = calloc(E, sizeof(int));
     for (i = 0; i < V + 1; i++) {
         scanf("%d", &borders[i]);
     }
