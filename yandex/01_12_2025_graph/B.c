@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define CHUNK_SIZE sizeof(unsigned long long)
+
 
 unsigned long long** allocate_matrix(int size, int numbers) {
     unsigned long long** matrix = calloc(size, sizeof(unsigned long long*));
@@ -13,13 +15,13 @@ unsigned long long** allocate_matrix(int size, int numbers) {
 
 
 unsigned long long check_bit(unsigned long long number, int bit_index) {
-    return number & 1ULL << (bit_index % 64);
+    return number & 1ULL << (bit_index % CHUNK_SIZE);
 }
+
 
 void set_bit(unsigned long long* number, int bit_index) {
-    *number |= 1ULL << (bit_index % 64);
+    *number |= 1ULL << (bit_index % CHUNK_SIZE);
 }
-
 
 
 int DFS_recursive(unsigned long long** connections,
@@ -31,10 +33,10 @@ int DFS_recursive(unsigned long long** connections,
         return -1;
     }
     visited[current] = 1;
-    set_bit(&connections[target][current / 64], current);
+    set_bit(&connections[target][current / CHUNK_SIZE], current);
     int i;
     for (i = 0; i < N; i++) {
-        if (!visited[i] && check_bit(connections[current][i / 64], i)) {
+        if (!visited[i] && check_bit(connections[current][i / CHUNK_SIZE], i)) {
             DFS_recursive(connections, visited, i, target, N);
         }
     }
@@ -46,7 +48,7 @@ int main(void) {
     int N;
     int target;
     scanf("%d %d", &N, &target);
-    int numbers = (N + 63) / 64;
+    int numbers = (N + CHUNK_SIZE - 1) / CHUNK_SIZE;
     unsigned long long** connections = allocate_matrix(N, numbers);
     int* visited = calloc(N, sizeof(int));
     int letter;
@@ -56,13 +58,13 @@ int main(void) {
         for (j = 0; j < N; j++) {
             scanf("%d", &letter);
             if (letter) {
-                set_bit(&connections[i][j / 64], j);
+                set_bit(&connections[i][j / CHUNK_SIZE], j);
             }
         }
     }
     DFS_recursive(connections, visited, target, target, N);
     for (i = 0; i < N; i++) {
-        if (check_bit(connections[target][i / 64], i)) {
+        if (check_bit(connections[target][i / CHUNK_SIZE], i)) {
             printf("%d ", i);
         }
     }
@@ -70,5 +72,6 @@ int main(void) {
         free(connections[i]);
     }
     free(connections);
+    free(visited);
     return 0;
 }
