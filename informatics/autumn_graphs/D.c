@@ -5,6 +5,58 @@
 
 
 #define DOUBLE_MAX 1e20
+#define CHUNK_SIZE (8 * sizeof(unsigned long))
+
+
+typedef struct Bitset {
+    int size;
+    unsigned long* array;
+} Bitset;
+
+
+Bitset* allocate_bitset(int size) {
+    Bitset* bitset = malloc(sizeof(Bitset));
+    bitset->size = (size + CHUNK_SIZE - 1) / CHUNK_SIZE;
+    bitset->array = calloc(bitset->size, sizeof(unsigned long));
+    return bitset;
+}
+
+
+Bitset** allocate_bitsets_array(int size) {
+    Bitset** matrix = calloc(size, sizeof(Bitset*));
+    int i;
+    for (i = 0; i < size; i++) {
+        matrix[i] = allocate_bitset(size);
+    }
+    return matrix;
+}
+
+
+int check_bit(Bitset* bitset, int bit_index) {
+    if (bitset->array[bit_index / CHUNK_SIZE] & 1UL << (bit_index % CHUNK_SIZE)) {
+        return 1;
+    }
+    return 0;
+}
+
+
+void set_bit(Bitset* bitset, int bit_index) {
+    bitset->array[bit_index / CHUNK_SIZE] |= 1UL << (bit_index % CHUNK_SIZE);
+}
+
+
+int free_bitsets_int(Bitset** bitsets, int size) {
+    if (!bitsets) {
+        return -1;
+    }
+    int i;
+    for (i = 0; i < size; i++) {
+        free(bitsets[i]->array);
+        free(bitsets[i]);
+    }
+    free(bitsets);
+    return 1;
+}
 
 
 int equal(double a, double b) {
@@ -115,18 +167,35 @@ int in_storage(double** storage, int size, double x, double y) {
 
 
 
-int matrix_multiply(int** matrix1, int** matrix2, int** result, int size1, int size2) {
-    if (!matrix1 || !matrix2 || !result) {
+int count_triangles() {
+
+}
+
+
+
+
+int matrix_multiply(Bitset** matrix1, Bitset** matrix2_T, Bitset** result, int size) {
+    if (!matrix1 || !matrix2_T || !result) {
         return -1;
     }
     int i;
     int j;
-    int k;
-    for (i = 0; i < size1; i++) {
-        for (j = 0; j < size1; j++) {
-            for (k = 0; k < size2; k++) {
-                result[i][k] += matrix1[i][j] * matrix2[j][k];
+    int chunk;
+    for (i = 0; i < size; i++) {
+        for (j = 0; j < matrix2_T[0]->size; j++) {
+            result[i]->array[j] = 0;
+        }
+    }
+    for (i = 0; i < size; i++) {
+        for (j = 0; j < size; j++) {
+            chunk = 0;
+            while (chunk < matrix2_T[0]->size) {
+                if (matrix1[i]->array[chunk] & matrix2_T[j]->array[chunk]) {
+                    set_bit(result[i], j);
+                }
+                chunk++;
             }
+
         }
     }
     return 1;
@@ -169,11 +238,11 @@ int free_matrix_double(double** matrix, int size) {
 }
 
 
-int trace(int** matrix, int size) {
+int trace(Bitset** matrix, int size) {
     int i;
     int result = 0;
     for (i = 0; i < size; i++) {
-        result += matrix[i][i];
+        result += check_bit(matrix[i], i);
     }
     return result;
 }
@@ -202,7 +271,7 @@ int add_rectangle_sides(double** lines, double X, double Y) {
 }
 
 
-int build_adjacency(int** adjacency_matrix, int** dots,  int dots_amount, int total_lines) {
+int build_adjacency(Bitset** adjacency_matrix, int** dots,  int dots_amount, int total_lines) {
     if (!adjacency_matrix || !dots) {
         return -1;
     }
@@ -217,14 +286,16 @@ int build_adjacency(int** adjacency_matrix, int** dots,  int dots_amount, int to
                     k++;
                 }
                 if (k < dots_amount && dots[j][k]) {
-                    adjacency_matrix[i][k] = 1;
+                    set_bit(adjacency_matrix[i], k);
+                    set_bit(adjacency_matrix[k], i);
                 }
                 k = i - 1;
                 while (k >= 0 && !dots[j][k]) {
                     k--;
                 }
                 if (k >= 0 && dots[j][k]) {
-                    adjacency_matrix[i][k] = 1;
+                    set_bit(adjacency_matrix[i], k);
+                    set_bit(adjacency_matrix[k], i);
                 }
             }
         }
@@ -233,15 +304,33 @@ int build_adjacency(int** adjacency_matrix, int** dots,  int dots_amount, int to
 }
 
 
-int find_3_cycles(int** adjacency_matrix, int dots_amount) {
+int transpose(Bitset** matrix, Bitset** transposed, int size) {
+    if (!matrix || !transposed) {
+        return -1;
+    }
+    int i;
+    int j;
+    for (i = 0; i < size; i++) {
+        for (j = 0; j < matrix[0]->size; j++) {
+            if (check_bit(matrix[j], i)) {
+                set_bit(transposed[i], j);
+            }
+        }
+    }
+    return 1;
+}
+
+
+int find_3_cycles(Bitset** adjacency_matrix, int dots_amount) {
     // Using theorem from the internet
-    int** square = allocate_matrix(dots_amount);
-    int** cube = allocate_matrix(dots_amount);
-    matrix_multiply(adjacency_matrix, adjacency_matrix, square, dots_amount, dots_amount);
-    matrix_multiply(square, adjacency_matrix, cube, dots_amount, dots_amount);
-    int answer = trace(cube, dots_amount) / 6;
-    free_matrix_int(square, dots_amount);
-    free_matrix_int(cube, dots_amount);
+    Bitset** square = allocate_bitsets_array(dots_amount);
+    Bitset** transposed = allocate_bitsets_array(dots_amount);
+    transpose(adjacency_matrix, transposed, dots_amount);
+    matrix_multiply(adjacency_matrix, transposed, square, dots_amount);
+    matrix_multiply(square, transposed, adjacency_matrix, dots_amount);
+    int answer = trace(adjacency_matrix, dots_amount) / 6;
+    free_bitsets_int(square, dots_amount);
+    free_bitsets_int(transposed, dots_amount);
     return answer;
 }
 
@@ -309,10 +398,10 @@ int main(void) {
     // Сделали массив, показывающий какие точки лежат на каких прямых.
     quick_sort(storage, dots, total_lines, 0, dots_amount - 1);
     free_matrix_double(storage, MAX_DOTS);
-    int** adjacency_matrix = allocate_matrix(dots_amount);
+    Bitset** adjacency_matrix = allocate_bitsets_array(dots_amount);
     build_adjacency(adjacency_matrix, dots, dots_amount, total_lines);
     printf("%d", find_3_cycles(adjacency_matrix, dots_amount));
     free_matrix_int(dots, total_lines);
-    free_matrix_int(adjacency_matrix, dots_amount);
+    free_bitsets_int(adjacency_matrix, dots_amount);
     return 0;
 }
