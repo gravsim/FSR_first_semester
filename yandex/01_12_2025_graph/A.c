@@ -4,33 +4,33 @@
 
 int main(void) {
     int V;
-    int N;
+    int E;
     int i;
     int j;
     int weight;
     int out;
     int in;
-    scanf("%d %d", &V, &N);
-    int** connections = calloc(V, sizeof(int*));
+    scanf("%d %d", &V, &E);
+    int** incidence_matrix = calloc(V, sizeof(int*));
     for (i = 0; i < V; i++) {
-        connections[i] = calloc(N, sizeof(int));
-        for (j = 0; j < N; j++) {
-            connections[i][j] = -3;
+        incidence_matrix[i] = calloc(E, sizeof(int));
+        for (j = 0; j < E; j++) {
+            incidence_matrix[i][j] = -3;
         }
     }
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < E; i++) {
         scanf("%d %d %d", &out, &in, &weight);
-        connections[out][i] = -1;
-        connections[in][i] = weight;
+        incidence_matrix[out][i] = -1;
+        incidence_matrix[in][i] = weight;
     }
     for (i = 0; i < V; i++) {
-        for (j = 0; j < N; j++) {
-            printf("%d ", connections[i][j]);
+        for (j = 0; j < E; j++) {
+            printf("%d ", incidence_matrix[i][j]);
         }
         printf("\n");
     }
     for (i = 0; i < V; i++)
-        free(connections[i]);
-    free(connections);
+        free(incidence_matrix[i]);
+    free(incidence_matrix);
     return 0;
 }
