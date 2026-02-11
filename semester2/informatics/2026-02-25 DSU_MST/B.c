@@ -43,6 +43,7 @@ DSU_node* union_set(DSU_node* node1, DSU_node* node2) {
     if (node1->rang == node2->rang) {
         node1->rang++;
     }
+    node1->value += node2->value;
     return node1;
 }
 
@@ -56,6 +57,10 @@ int main(void) {
     int y;
     int w;
     scanf("%d %d", &n, &m);
+    DSU_node** nodes = calloc(n, sizeof(DSU_node*));
+    for (i = 0; i < n; i++) {
+        nodes[i] = make_set(0);
+    }
     for (i = 0; i < m; i++) {
         scanf("%d", &command);
         switch (command) {
@@ -63,19 +68,17 @@ int main(void) {
                 scanf("%d %d %d", &x, &y, &w);
                 x--;
                 y--;
-                make_set(w);
+                nodes[x]->value = w;
+                union_set(nodes[x], nodes[y]);
                 break;
             case 2:
                 scanf("%d", &x);
                 x--;
-                printf("\n%d", BFS(adjacency_matrix, n, x));
+                printf("\n%d", find_set(nodes[x])->value);
                 break;
             default: ;
         }
     }
-    for (i = 0; i < n; i++) {
-        free(adjacency_matrix[i]);
-    }
-    free(adjacency_matrix);
+    free(nodes);
     return 0;
 }
