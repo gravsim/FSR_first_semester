@@ -2,37 +2,76 @@
 #include <stdlib.h>
 
 
-void print_array(int size, int* array) {
+int** set_adjacency_matrix(int n) {
     int i;
-    for (i = 0; i < size; i++) {
-        if (array[i]) {
-            printf("%d ", array[i]);
-        }
+    int** adjacency_matrix = calloc(n, sizeof(int*));
+    for (i = 0; i < n; i++) {
+        adjacency_matrix[i] = calloc(n, sizeof(int));
     }
-    printf("\n");
+    return adjacency_matrix;
 }
 
 
-void separate(int remaining_sum, int max_value, int len, int* array) {
+int BFS(int** adjacency_matrix, int n, int source) {
+    if (!adjacency_matrix) {
+        return -1;
+    }
+    int* visited = calloc(n, sizeof(int));
+    int* queue = calloc(n, sizeof(int));
+    int front = 0;
+    int back = 0;
+    int weight = 0;
+    int current;
     int i;
-    if (remaining_sum == 0) {
-        print_array(len, array);
-        return;
-    }
-    for (i = 1; i <= max_value; i++) {
-        if (i <= remaining_sum) {
-            array[len] = i;
-            separate(remaining_sum - i, i, len + 1, array);
+    visited[source] = 1;
+    queue[back++] = source;
+    while (front < back) {
+        current = queue[front];
+        for (i = 0; i < n; i++) {
+            if (adjacency_matrix[current][i] && !visited[i]) {
+                visited[i] = 1;
+                queue[back++] = i;
+                weight += adjacency_matrix[current][i];
+            }
         }
+        front++;
     }
+    free(visited);
+    free(queue);
+    return weight;
 }
 
 
 int main(void) {
-    int N;
-    scanf("%d", &N);
-    int* array = (int*)calloc(N, sizeof(int));
-    separate(N, N, 0, array);
-    free(array);
+    int n;
+    int m;
+    int i;
+    int command;
+    int x;
+    int y;
+    int w;
+    scanf("%d %d", &n, &m);
+    int** adjacency_matrix = set_adjacency_matrix(n);
+    for (i = 0; i < m; i++) {
+        scanf("%d ", &command);
+        switch (command) {
+            case 1:
+                scanf("%d %d %d", &x, &y, &w);
+                x--;
+                y--;
+                adjacency_matrix[x][y] += w;
+                break;
+            case 2:
+                scanf("%d", &x);
+                x--;
+                printf("\n%d", BFS(adjacency_matrix, n, x));
+                break;
+            default: ;
+        }
+    }
+    for (i = 0; i < n; i++) {
+        free(adjacency_matrix[i]);
+    }
+    free(adjacency_matrix);
     return 0;
 }
