@@ -1,5 +1,5 @@
-# FSR_first_semester
+# FSR_programs
 
-### Коды к задачам на языке C первого семестра ФКИ. Yeah
+### Коды к задачам на языке C факультета ФКИ. Bitch!
 
-![casino](casino.png "Me")
+![casino](bloroda.jpg "Me")
