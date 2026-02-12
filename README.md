@@ -1,5 +1,5 @@
 # FSR_homeworks
 
-### Коды к задачам на языке C факультета ФКИ. Bitch!
+### Коды к задачам на языке C факультета ФКИ.
 
-![casino](bloroda.jpg "Me")
+![bloroda](bloroda.jpg "Me")
