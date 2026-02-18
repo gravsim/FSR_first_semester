@@ -218,8 +218,7 @@ int main(void) {
         i++;
     }
     quick_sort(final_edges, 0, edges_amount, 0, edges_amount - 1);
-    printf("ABOBA10\n");
-    printf("%d\n", sum);
+    printf("Minimal sum: %d\n", sum);
     for (i = 0; i < edges_amount; i++) {
         printf("%d %d\n", final_edges[i][0] + 1, final_edges[i][1]);
     }
