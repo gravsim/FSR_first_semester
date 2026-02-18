@@ -179,10 +179,10 @@ int main(void) {
     for (i = 0; i < E; i++) {
         final_edges[i] = calloc(2, sizeof(int));
     }
-    printf("%d", Prim(V, adjacency_matrix, previous));
+    Prim(V, adjacency_matrix, previous);
     int edges_amount = 0;
-    for (i = 0; i < V - 1; i++) {
-        for (j = 0; j < V - 1; j++) {
+    for (i = 0; i < E; i++) {
+        for (j = 0; j < E; j++) {
             if (edges[i][0] == previous[j] && edges[i][1] == j) {
                 final_edges[edges_amount][0] = i;
                 final_edges[edges_amount][1] = edges[i][2];
@@ -191,25 +191,37 @@ int main(void) {
         }
     }
 
+    for (i = 0; i < V - 1; i++) {
+        printf("%d %d\n", final_edges[i][0], final_edges[i][1]);
+    }
     quick_sort(final_edges, 1, edges_amount, 0, edges_amount - 1);
     i = 0;
     int sum = 0;
-    while (min_length - final_edges[i][1] >= 0) {
+    while (min_length - final_edges[i][1] >= 0 && i < edges_amount) {
         min_length -= final_edges[i][1];
-        final_edges[i][1] *= min_price;
-        sum += final_edges[i][1];
+        sum += final_edges[i][1] * min_price;
+        if (is_swapped) {
+            final_edges[i][1] = 5;
+        } else {
+            final_edges[i][1] = 6;
+        }
         i++;
     }
-    while (max_length - final_edges[i][1] >= 0) {
+    while (max_length - final_edges[i][1] >= 0 && i < edges_amount) {
         max_length -= final_edges[i][1];
-        final_edges[i][1] *= max_price;
-        sum += final_edges[i][1];
+        sum += final_edges[i][1] * max_price;
+        if (is_swapped) {
+            final_edges[i][1] = 6;
+        } else {
+            final_edges[i][1] = 5;
+        }
         i++;
     }
     quick_sort(final_edges, 0, edges_amount, 0, edges_amount - 1);
-    printf("%d", sum);
+    printf("ABOBA10\n");
+    printf("%d\n", sum);
     for (i = 0; i < edges_amount; i++) {
-        printf("%d %d", final_edges[i][0], final_edges[i][1]);
+        printf("%d %d\n", final_edges[i][0] + 1, final_edges[i][1]);
     }
     free_adjacency_matrix(adjacency_matrix, V);
     return 0;
