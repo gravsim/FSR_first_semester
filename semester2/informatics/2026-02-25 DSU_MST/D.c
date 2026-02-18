@@ -32,14 +32,14 @@ int get_minimal_weight(int* distances, int* visited, int V) {
     }
     int i = 0;
     int minimum = MAX_WEIGHT;
-    int min_index = -1;
+    int cheap_index = -1;
     for (i = 0; i < V; i++) {
         if (!visited[i] && distances[i] < minimum) {
             minimum = distances[i];
-            min_index = i;
+            cheap_index = i;
         }
     }
-    return min_index;
+    return cheap_index;
 }
 
 
@@ -153,15 +153,23 @@ int max(int a, int b) {
 }
 
 
-int closest_sum_recursive(int i, int N, int sum, int target, int** final_edges, int* cable_types) {
+int closest_sum_recursive(int i,
+    int N,
+    int sum,
+    int target,
+    int** final_edges,
+    int* cable_types,
+    int expensive_type,
+    int cheap_type) {
     if (i >= N) {
         return sum;
     }
-    int pass = closest_sum_recursive(i + 1, N, sum, target, final_edges, cable_types);
+    int pass = closest_sum_recursive(i + 1, N, sum, target, final_edges, cable_types, expensive_type, cheap_type);
     if (pass > target) {
+        cable_types[i] = expensive_type;
         return sum;
     }
-    int smash = closest_sum_recursive(i + 1, N, sum + final_edges[i][1], target, final_edges, cable_types);
+    int smash = closest_sum_recursive(i + 1, N, sum + final_edges[i][1], target, final_edges, cable_types, expensive_type, cheap_type);
     if (smash > target) {
         return pass;
     }
@@ -188,15 +196,19 @@ int main(void) {
         edges[i][1]--;
     }
     int** adjacency_matrix = set_adjacency_matrix(V, E, edges);
-    int max_price;
-    int min_price;
-    int max_length;
-    int min_length;
-    scanf("%d %d %d %d", &max_price, &max_length, &min_price, &min_length);
+    int expensive_price;
+    int cheap_price;
+    int expensive_length;
+    int cheap_length;
+    int expensive_type = 5;
+    int cheap_type = 6;
+    scanf("%d %d %d %d", &expensive_price, &expensive_length, &cheap_price, &cheap_length);
     int is_swapped = 0;
-    if (max_price < min_price) {
-        swap_int(&max_price, &min_price);
-        swap_int(&max_length, &min_length);
+    if (expensive_price < cheap_price) {
+        expensive_type = 6;
+        cheap_type = 5;
+        swap_int(&expensive_price, &cheap_price);
+        swap_int(&expensive_length, &cheap_length);
         is_swapped = 1;
     }
     int** final_edges = calloc(E, sizeof(int*));
@@ -221,12 +233,19 @@ int main(void) {
     }
     quick_sort(final_edges, 1, edges_amount, 0, edges_amount - 1);
     i = 0;
-    int min_sum = closest_sum_recursive(0, edges_amount, 0, min_length, final_edges, cable_types);
-    printf("min_sum: %d\n", min_sum);
+    int cheap_sum = closest_sum_recursive(0,
+        edges_amount,
+        0,
+        cheap_length,
+        final_edges,
+        cable_types,
+        expensive_type,
+        cheap_type);
+    printf("cheap_sum: %d\n", cheap_sum);
     int sum = 0;
-    while (min_length - final_edges[i][1] >= 0 && i < edges_amount) {
-        min_length -= final_edges[i][1];
-        sum += final_edges[i][1] * min_price;
+    while (cheap_length - final_edges[i][1] >= 0 && i < edges_amount) {
+        cheap_length -= final_edges[i][1];
+        sum += final_edges[i][1] * cheap_price;
         if (is_swapped) {
             final_edges[i][1] = 5;
         } else {
@@ -234,9 +253,9 @@ int main(void) {
         }
         i++;
     }
-    while (max_length - final_edges[i][1] >= 0 && i < edges_amount) {
-        max_length -= final_edges[i][1];
-        sum += final_edges[i][1] * max_price;
+    while (expensive_length - final_edges[i][1] >= 0 && i < edges_amount) {
+        expensive_length -= final_edges[i][1];
+        sum += final_edges[i][1] * expensive_price;
         if (is_swapped) {
             final_edges[i][1] = 6;
         } else {
