@@ -120,18 +120,18 @@ int Prim(int V, int** adjacency_matrix, int* previous) {
 }
 
 
-void quick_sort(int** main_array, int size, int down, int up) {
+void quick_sort(int** main_array, int sort_index, int size, int down, int up) {
     if (down >= up) {
         return;
     }
-    int pivot = main_array[(up + down) / 2][1];
+    int pivot = main_array[(up + down) / 2][sort_index];
     int left = down;
     int right = up;
     while (left <= right) {
-        while (main_array[left][1] < pivot) {
+        while (main_array[left][sort_index] < pivot) {
             left++;
         }
-        while (pivot < main_array[right][1]) {
+        while (pivot < main_array[right][sort_index]) {
             right--;
         }
         if (left <= right) {
@@ -140,10 +140,9 @@ void quick_sort(int** main_array, int size, int down, int up) {
             right--;
         }
     }
-    quick_sort(main_array, size, down, right);
-    quick_sort(main_array, size, left, up);
+    quick_sort(main_array, sort_index, size, down, right);
+    quick_sort(main_array, sort_index, size, left, up);
 }
-
 
 
 int main(void) {
@@ -191,7 +190,27 @@ int main(void) {
             }
         }
     }
-    quick_sort(final_edges, edges_amount, 0, edges_amount - 1);
+
+    quick_sort(final_edges, 1, edges_amount, 0, edges_amount - 1);
+    i = 0;
+    int sum = 0;
+    while (min_length - final_edges[i][1] >= 0) {
+        min_length -= final_edges[i][1];
+        final_edges[i][1] *= min_price;
+        sum += final_edges[i][1];
+        i++;
+    }
+    while (max_length - final_edges[i][1] >= 0) {
+        max_length -= final_edges[i][1];
+        final_edges[i][1] *= max_price;
+        sum += final_edges[i][1];
+        i++;
+    }
+    quick_sort(final_edges, 0, edges_amount, 0, edges_amount - 1);
+    printf("%d", sum);
+    for (i = 0; i < edges_amount; i++) {
+        printf("%d %d", final_edges[i][0], final_edges[i][1]);
+    }
     free_adjacency_matrix(adjacency_matrix, V);
     return 0;
 }
