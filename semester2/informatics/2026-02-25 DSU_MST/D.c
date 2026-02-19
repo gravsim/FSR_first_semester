@@ -155,25 +155,26 @@ int max(int a, int b) {
 
 int closest_sum_recursive(int i,
     int N,
-    int sum,
-    int target,
+    int remaining_sum,
     int** final_edges,
-    int* cable_types,
-    int expensive_type,
-    int cheap_type) {
+    int** take,
+    int** combinations) {
     if (i >= N) {
-        return sum;
+        return 0;
     }
-    int pass = closest_sum_recursive(i + 1, N, sum, target, final_edges, cable_types, expensive_type, cheap_type);
-    if (pass > target) {
-        cable_types[i] = expensive_type;
-        return sum;
+    if (combinations[i][remaining_sum] != 0) {
+        return combinations[i][remaining_sum];
     }
-    int smash = closest_sum_recursive(i + 1, N, sum + final_edges[i][1], target, final_edges, cable_types, expensive_type, cheap_type);
-    if (smash > target) {
-        return pass;
+    int best_result = closest_sum_recursive(i + 1, N, remaining_sum, final_edges, take, combinations);
+    if (final_edges[i][1] < remaining_sum) {
+        int smash = final_edges[i][1] + closest_sum_recursive(i + 1, N, remaining_sum - final_edges[i][1], final_edges, take, combinations);
+        if (smash > best_result) {
+            best_result = smash;
+            take[i][remaining_sum] = 1;
+        }
     }
-    return max(smash, pass);
+    combinations[i][remaining_sum] = best_result;
+    return best_result;
 }
 
 
@@ -203,16 +204,13 @@ int main(void) {
     int expensive_type = 5;
     int cheap_type = 6;
     scanf("%d %d %d %d", &expensive_price, &expensive_length, &cheap_price, &cheap_length);
-    int is_swapped = 0;
     if (expensive_price < cheap_price) {
         expensive_type = 6;
         cheap_type = 5;
         swap_int(&expensive_price, &cheap_price);
         swap_int(&expensive_length, &cheap_length);
-        is_swapped = 1;
     }
     int** final_edges = calloc(E, sizeof(int*));
-
     for (i = 0; i < E; i++) {
         final_edges[i] = calloc(2, sizeof(int));
     }
@@ -227,46 +225,46 @@ int main(void) {
             }
         }
     }
-    int* cable_types = calloc(edges_amount, sizeof(int));
-    for (i = 0; i < V - 1; i++) {
-        printf("%d %d\n", final_edges[i][0], final_edges[i][1]);
+    int** take = calloc(edges_amount, sizeof(int*));
+    int** combinations = calloc(edges_amount, sizeof(int*));
+    for (i = 0; i < edges_amount; i++) {
+        take[i] = calloc(cheap_length, sizeof(int));
+        combinations[i] = calloc(cheap_length, sizeof(int));
     }
-    quick_sort(final_edges, 1, edges_amount, 0, edges_amount - 1);
-    i = 0;
     int cheap_sum = closest_sum_recursive(0,
         edges_amount,
-        0,
         cheap_length,
         final_edges,
-        cable_types,
-        expensive_type,
-        cheap_type);
-    printf("cheap_sum: %d\n", cheap_sum);
-    int sum = 0;
-    while (cheap_length - final_edges[i][1] >= 0 && i < edges_amount) {
-        cheap_length -= final_edges[i][1];
-        sum += final_edges[i][1] * cheap_price;
-        if (is_swapped) {
-            final_edges[i][1] = 5;
-        } else {
-            final_edges[i][1] = 6;
-        }
-        i++;
-    }
-    while (expensive_length - final_edges[i][1] >= 0 && i < edges_amount) {
-        expensive_length -= final_edges[i][1];
-        sum += final_edges[i][1] * expensive_price;
-        if (is_swapped) {
-            final_edges[i][1] = 6;
-        } else {
-            final_edges[i][1] = 5;
-        }
-        i++;
-    }
-    quick_sort(final_edges, 0, edges_amount, 0, edges_amount - 1);
-    printf("Minimal sum: %d\n", sum);
+        take,
+        combinations);
+    printf("Take array:\n");
     for (i = 0; i < edges_amount; i++) {
-        printf("%d %d\n", final_edges[i][0] + 1, cable_types[i]);
+        for (j = 0; j < cheap_length; j++) {
+            printf("%d ", take[i][j]);
+        }
+        printf("\n");
+    }
+    printf("combinations array:\n");
+    for (i = 0; i < edges_amount; i++) {
+        for (j = 0; j < cheap_length; j++) {
+            printf("%d ", combinations[i][j]);
+        }
+        printf("\n");
+    }
+    int remaining_sum = cheap_length;
+    int edges_sum = 0;
+    for (i = 0; i < edges_amount; i++) {
+        edges_sum += final_edges[i][1];
+        if (take[i][remaining_sum]) {
+            remaining_sum -= final_edges[i][1];
+            final_edges[i][1] = cheap_type;
+        } else {
+            final_edges[i][1] = expensive_type;
+        }
+    }
+    printf("%d\n", cheap_sum * cheap_price + (edges_sum - cheap_sum) * expensive_price);
+    for (i = 0; i < edges_amount; i++) {
+        printf("%d %d\n", final_edges[i][0] + 1, final_edges[i][1]);
     }
     free_adjacency_matrix(adjacency_matrix, V);
     return 0;
