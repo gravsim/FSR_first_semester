@@ -32,33 +32,38 @@ int get_minimal_weight(int* distances, int* visited, int V) {
     }
     int i = 0;
     int minimum = MAX_WEIGHT;
-    int cheap_index = -1;
+    int min_index = -1;
     for (i = 0; i < V; i++) {
         if (!visited[i] && distances[i] < minimum) {
             minimum = distances[i];
-            cheap_index = i;
+            min_index = i;
         }
     }
-    return cheap_index;
+    return min_index;
 }
 
 
 int** set_adjacency_matrix(int V, int M, int** edges) {
     int i;
+    int j;
     int vertex1;
     int vertex2;
     int weight;
     int** adjacency_matrix = calloc(V, sizeof(int*));
     for (i = 0; i < V; i++) {
         adjacency_matrix[i] = calloc(V, sizeof(int));
+        for (j = 0; j < V; j++) {
+            adjacency_matrix[i][j] = -1;
+        }
     }
     for (i = 0; i < M; i++) {
         vertex1 = edges[i][0];
         vertex2 = edges[i][1];
         weight = edges[i][2];
-
-        adjacency_matrix[vertex1][vertex2] = weight;
-        adjacency_matrix[vertex2][vertex1] = weight;
+        if (adjacency_matrix[vertex1][vertex2] == -1 || weight < adjacency_matrix[vertex1][vertex2]) {
+            adjacency_matrix[vertex1][vertex2] = weight;
+            adjacency_matrix[vertex2][vertex1] = weight;
+        }
     }
     return adjacency_matrix;
 }
@@ -77,7 +82,7 @@ int free_adjacency_matrix(int** adjacency_matrix, int V) {
 }
 
 
-int Prim(int V, int** adjacency_matrix, int* previous) {
+int Prim(int V, int** adjacency_matrix, int* previous, int* distances, int* visited) {
     if (!adjacency_matrix) {
         return -1;
     }
@@ -86,20 +91,14 @@ int Prim(int V, int** adjacency_matrix, int* previous) {
     int visited_amount;
     int answer = 0;
     int v;
-    for (i = 0; i < V; i++) {
-        previous[i] = -1;
-    }
-    int* distances = calloc(V, sizeof(int));
-    for (i = 0; i < V; i++) {
-        distances[i] = MAX_WEIGHT;
-    }
-    distances[0] = 0;
-    int* visited = calloc(V, sizeof(int));
     for (visited_amount = 1; visited_amount < V; visited_amount++) {
         v = get_minimal_weight(distances, visited, V);
+        if (v == -1) {
+            return -1;
+        }
         visited[v] = 1;
         for (w = 0; w < V; w++) {
-            if (adjacency_matrix[v][w]
+            if (adjacency_matrix[v][w] != -1
             && !visited[w]
             && adjacency_matrix[v][w] < distances[w]) {
                 previous[w] = v;
@@ -110,8 +109,6 @@ int Prim(int V, int** adjacency_matrix, int* previous) {
     for (i = 0; i < V; i++) {
         answer += distances[i];
     }
-    free(distances);
-    free(visited);
     return answer;
 }
 
@@ -141,8 +138,8 @@ void quick_sort(int** main_array, int sort_index, int size, int down, int up) {
 }
 
 
-int max(int a, int b) {
-    if (a > b) {
+int min(int a, int b) {
+    if (a < b) {
         return a;
     }
     return b;
@@ -158,11 +155,12 @@ int closest_sum_recursive(int i,
     if (i >= N) {
         return 0;
     }
-    if (combinations[i][remaining_sum] != 0) {
+    if (combinations[i][remaining_sum] != -1) {
         return combinations[i][remaining_sum];
     }
+    take[i][remaining_sum] = 0;
     int best_result = closest_sum_recursive(i + 1, N, remaining_sum, final_edges, take, combinations);
-    if (final_edges[i][1] < remaining_sum) {
+    if (final_edges[i][1] <= remaining_sum) {
         int smash = final_edges[i][1] + closest_sum_recursive(i + 1, N, remaining_sum - final_edges[i][1], final_edges, take, combinations);
         if (smash > best_result) {
             best_result = smash;
@@ -206,31 +204,56 @@ int main(void) {
         swap_int(&expensive_price, &cheap_price);
         swap_int(&expensive_length, &cheap_length);
     }
-    int** final_edges = calloc(E, sizeof(int*));
+    int** final_weights = calloc(E, sizeof(int*));
     for (i = 0; i < E; i++) {
-        final_edges[i] = calloc(2, sizeof(int));
+        final_weights[i] = calloc(2, sizeof(int));
     }
-    Prim(V, adjacency_matrix, previous);
+    for (i = 0; i < V; i++) {
+        previous[i] = -1;
+    }
+    int* distances = calloc(V, sizeof(int));
+    for (i = 0; i < V; i++) {
+        distances[i] = MAX_WEIGHT;
+    }
+    distances[0] = 0;
+    int* visited = calloc(V, sizeof(int));
+    if (Prim(V, adjacency_matrix, previous, distances, visited) < 0) {
+        printf("Impossible");
+        return 0;
+    }
     int edges_amount = 0;
     for (i = 0; i < E; i++) {
-        for (j = 0; j < E; j++) {
-            if (edges[i][0] == previous[j] && edges[i][1] == j) {
-                final_edges[edges_amount][0] = i;
-                final_edges[edges_amount][1] = edges[i][2];
+        for (j = 0; j < V; j++) {
+            if ((edges[i][0] == previous[j] && edges[i][1] == j) ||
+                (edges[i][0] == j && edges[i][1] == previous[j])) {
+                final_weights[edges_amount][0] = i;
+                final_weights[edges_amount][1] = edges[i][2];
                 edges_amount++;
             }
         }
+    }
+    int edges_sum = 0;
+    for (i = 0; i < edges_amount; i++) {
+        edges_sum += final_weights[i][1];
+    }
+    // printf("edges_amount: %d", edges_amount);
+    if (edges_amount != V - 1 || edges_sum > cheap_length + expensive_length) {
+        printf("Impossible");
+        return 0;
     }
     int** take = calloc(edges_amount, sizeof(int*));
     int** combinations = calloc(edges_amount, sizeof(int*));
     for (i = 0; i < edges_amount; i++) {
         take[i] = calloc(cheap_length + 1, sizeof(int));
         combinations[i] = calloc(cheap_length + 1, sizeof(int));
+        for (j = 0; j < cheap_length + 1; j++) {
+            combinations[i][j] = -1;
+        }
     }
     int cheap_sum = closest_sum_recursive(0,
         edges_amount,
         cheap_length,
-        final_edges,
+        final_weights,
         take,
         combinations);
     // printf("Take array:\n");
@@ -241,31 +264,35 @@ int main(void) {
     //     printf("\n");
     // }
     int remaining_sum = cheap_length;
-    int edges_sum = 0;
     for (i = 0; i < edges_amount; i++) {
-        edges_sum += final_edges[i][1];
         if (take[i][remaining_sum]) {
-            remaining_sum -= final_edges[i][1];
-            final_edges[i][1] = cheap_type;
+            remaining_sum -= final_weights[i][1];
+            final_weights[i][1] = cheap_type;
         } else {
-            final_edges[i][1] = expensive_type;
+            final_weights[i][1] = expensive_type;
         }
+    }
+    if (edges_amount != V - 1 || edges_sum > cheap_sum + expensive_length) {
+        printf("Impossible");
+        return 0;
     }
     printf("%d\n", cheap_sum * cheap_price + (edges_sum - cheap_sum) * expensive_price);
     for (i = 0; i < edges_amount; i++) {
-        printf("%d %d\n", final_edges[i][0] + 1, final_edges[i][1]);
+        printf("%d %d\n", final_weights[i][0] + 1, final_weights[i][1]);
     }
     free_adjacency_matrix(adjacency_matrix, V);
     for (i = 0; i < E; i++) {
         free(edges[i]);
-        free(final_edges[i]);
+        free(final_weights[i]);
     }
     for (i = 0; i < edges_amount; i++) {
         free(take[i]);
         free(combinations[i]);
     }
-    free(final_edges);
+    free(final_weights);
     free(take);
+    free(distances);
+    free(visited);
     free(edges);
     free(combinations);
     free(previous);
