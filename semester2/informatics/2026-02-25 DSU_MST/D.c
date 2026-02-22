@@ -99,9 +99,7 @@ int Prim(int V, int*** adjacency_matrix, int* previous, int** distances, int* vi
     int visited_amount;
     int answer = 0;
     int v;
-    printf("DAMN\n");
     for (visited_amount = 1; visited_amount < V; visited_amount++) {
-        printf("DAMN2\n");
         v = get_minimal_weight(distances, visited, V);
         if (v == -1) {
             return -1;
@@ -114,7 +112,6 @@ int Prim(int V, int*** adjacency_matrix, int* previous, int** distances, int* vi
                 previous[w] = v;
                 distances[w][1] = adjacency_matrix[v][w][1];
                 distances[w][0] = adjacency_matrix[v][w][0];
-                printf("ABOBA");
             }
         }
     }
@@ -147,14 +144,6 @@ void quick_sort(int** main_array, int sort_index, int size, int down, int up) {
     }
     quick_sort(main_array, sort_index, size, down, right);
     quick_sort(main_array, sort_index, size, left, up);
-}
-
-
-int min(int a, int b) {
-    if (a < b) {
-        return a;
-    }
-    return b;
 }
 
 
@@ -216,10 +205,6 @@ int main(void) {
         swap_int(&expensive_price, &cheap_price);
         swap_int(&expensive_length, &cheap_length);
     }
-    int** final_weights = calloc(E, sizeof(int*));
-    for (i = 0; i < E; i++) {
-        final_weights[i] = calloc(2, sizeof(int));
-    }
     for (i = 0; i < V; i++) {
         previous[i] = -1;
     }
@@ -231,22 +216,16 @@ int main(void) {
         distances[i][1] = MAX_WEIGHT;
     }
     distances[0][1] = 0;
-    printf("AB");
     int* visited = calloc(V, sizeof(int));
     if (Prim(V, adjacency_matrix, previous, distances, visited) < 0) {
-        printf("Impossible1");
+        printf("Impossible");
         return 0;
     }
-    printf("ARR:\n");
-    for (i = 0; i < V; i++) {
-        printf("%d %d \n", distances[i][0], distances[i][1]);
-    }
-    printf("\n");
+    int** distances_shifted = distances + 1;
     int edges_sum = 0;
-    for (i = 0; i < V; i++) {
-        edges_sum += final_weights[i][1];
+    for (i = 0; i < V - 1; i++) {
+        edges_sum += distances_shifted[i][1];
     }
-    printf("V - 1: %d\n", V - 1);
     int** take = calloc(V - 1, sizeof(int*));
     int** combinations = calloc(V - 1, sizeof(int*));
     for (i = 0; i < V - 1; i++) {
@@ -256,48 +235,43 @@ int main(void) {
             combinations[i][j] = -1;
         }
     }
+    quick_sort(distances_shifted, 0, V - 1, 0, V - 2);
     int cheap_sum = closest_sum_recursive(0,
         V - 1,
         cheap_length,
-        final_weights,
+        distances_shifted,
         take,
         combinations);
-    // printf("Take array:\n");
-    // for (i = 0; i < V - 1; i++) {
-    //     for (j = 0; j < cheap_length + 1; j++) {
-    //         printf("%d ", take[i][j]);
-    //     }
-    //     printf("\n");
-    // }
     int remaining_sum = cheap_length;
     for (i = 0; i < V - 1; i++) {
         if (take[i][remaining_sum]) {
-            remaining_sum -= final_weights[i][1];
-            final_weights[i][1] = cheap_type;
+            remaining_sum -= distances_shifted[i][1];
+            distances_shifted[i][1] = cheap_type;
         } else {
-            final_weights[i][1] = expensive_type;
+            distances_shifted[i][1] = expensive_type;
         }
     }
     if (edges_sum > cheap_sum + expensive_length) {
-        printf("Impossible3");
+        printf("Impossible");
         return 0;
     }
     printf("%d\n", cheap_sum * cheap_price + (edges_sum - cheap_sum) * expensive_price);
     for (i = 0; i < V - 1; i++) {
-        printf("%d %d\n", final_weights[i][0] + 1, final_weights[i][1]);
+        printf("%d %d\n", distances_shifted[i][0] + 1, distances_shifted[i][1]);
     }
     free_adjacency_matrix(adjacency_matrix, V);
     for (i = 0; i < E; i++) {
         free(edges[i]);
-        free(final_weights[i]);
     }
     for (i = 0; i < V - 1; i++) {
         free(take[i]);
         free(combinations[i]);
     }
-    free(final_weights);
-    free(take);
+    for (i = 0; i < V; i++) {
+        free(distances[i]);
+    }
     free(distances);
+    free(take);
     free(visited);
     free(edges);
     free(combinations);
