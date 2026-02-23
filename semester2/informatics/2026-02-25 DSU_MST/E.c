@@ -52,6 +52,8 @@ int get_minimal_weight(int* distances, int* visited, int V) {
 
 
 void set_distance(
+    int* added_amount,
+    int N,
     int M,
     int* distances,
     int* visited,
@@ -61,23 +63,18 @@ void set_distance(
     int length,
     int parent_x,
     int parent_y) {
-    if (!visited[y * M + x] && distances[y * M + x] > length) {
+    if (x < M && y < N && !visited[y * M + x] && distances[y * M + x] > length) {
         distances[y * M + x] = length;
         previous[y * M + x] = parent_y * M + parent_x;
     }
 }
 
 
-int Prim(int N, int M, int V, int** adjacency_matrix, int* distances, int* visited, int* previous) {
-    /*
-        In this program array `previous` is not used. I will keep it
-        if in future I will need to construct gotten tree.
-    */
+int Prim(int* added_amount, int N, int M, int V, int** adjacency_matrix, int* distances, int* visited, int* previous) {
     if (!adjacency_matrix) {
         return -1;
     }
     int i;
-    int w;
     int visited_amount;
     int answer = 0;
     int v;
@@ -90,20 +87,20 @@ int Prim(int N, int M, int V, int** adjacency_matrix, int* distances, int* visit
         y = v / M;
         switch (adjacency_matrix[y][x]) {
             case 0:
-                set_distance(M, distances, visited, previous, x+1, y,2,x,y);
-                set_distance(M, distances, visited, previous, x, y+1,1,x,y);
+                set_distance(added_amount, N, M, distances, visited, previous, x+1, y,2,x,y);
+                set_distance(added_amount, N, M, distances, visited, previous, x, y+1,1,x,y);
                 break;
             case 1:
-                set_distance(M, distances, visited, previous, x+1, y,1,x,y);
-                set_distance(M, distances, visited, previous, x, y+1,0,x,y);
+                set_distance(added_amount, N, M, distances, visited, previous, x+1, y,2,x,y);
+                set_distance(added_amount, N, M, distances, visited, previous, x, y+1,0,x,y);
                 break;
             case 2:
-                set_distance(M, distances, visited, previous, x+1, y,0,x,y);
-                set_distance(M, distances, visited, previous, x, y+1,1,x,y);
+                set_distance(added_amount, N, M, distances, visited, previous, x+1, y,0,x,y);
+                set_distance(added_amount, N, M, distances, visited, previous, x, y+1,1,x,y);
                 break;
             case 3:
-                set_distance(M, distances, visited, previous, x+1, y,0,x,y);
-                set_distance(M, distances, visited, previous, x, y+1,0,x,y);
+                set_distance(added_amount, N, M, distances, visited, previous, x+1, y,0,x,y);
+                set_distance(added_amount, N, M, distances, visited, previous, x, y+1,0,x,y);
                 break;
             default:
                 break;
@@ -148,10 +145,11 @@ int main(void) {
     int N;
     int i;
     int j;
+    int added_amount = 0;
     scanf("%d %d", &N, &M);
     int V = M * N;
     int** adjacency_matrix = calloc(N, sizeof(int*));
-    for (i = 0; i < V; i++) {
+    for (i = 0; i < N; i++) {
         adjacency_matrix[i] = calloc(M, sizeof(int*));
     }
     for (i = 0; i < N; i++) {
@@ -169,7 +167,8 @@ int main(void) {
     }
     distances[0] = 0;
     int* visited = calloc(V, sizeof(int));
-    int result = Prim(N, M, V, adjacency_matrix, distances, visited, previous);
+    int result = Prim(&added_amount, N, M, V, adjacency_matrix, distances, visited, previous);
+    printf("added_amount: %d Sum: %d\n", added_amount, result);
     free(distances);
     free(visited);
     free(previous);
