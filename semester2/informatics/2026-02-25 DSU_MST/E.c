@@ -4,6 +4,100 @@
 #define MAX_WEIGHT 1000
 
 
+typedef struct Node {
+    int index;
+    int weight;
+} Node;
+
+
+typedef struct Heap {
+    int size;
+    int capacity;
+    Node* values;
+} Heap;
+
+
+int swap(int* a, int* b) {
+    int tmp = *a;
+    *a = *b;
+    *b = tmp;
+    return 0;
+}
+
+
+int swap_nodes(Node* a, Node* b) {
+    Node tmp = *a;
+    *a = *b;
+    *b = tmp;
+    return 0;
+}
+
+
+int is_full(Heap* heap) {
+    return heap->size == heap->capacity;
+}
+
+
+void expand(Heap* heap) {
+    heap->capacity *= 2;
+    heap->values = (Node*)realloc(heap->values, heap->capacity * sizeof(Node));
+}
+
+
+int sift_up(Heap* heap, int index) {
+    while (index > 0 && heap->values[index].weight < heap->values[(index - 1) / 2].weight) {
+        swap_nodes(&heap->values[index], &heap->values[(index - 1) / 2]);
+        index = (index - 1) / 2;
+    }
+    return 0;
+}
+
+
+int sift_down(Heap* heap, int index) {
+    int max_index = index;
+    if (2 * index + 2 < heap->size && heap->values[2 * index + 2].weight < heap->values[max_index].weight) {
+        max_index = 2 * index + 2;
+    }
+    if (2 * index + 1 < heap->size && heap->values[2 * index + 1].weight < heap->values[max_index].weight) {
+        max_index = 2 * index + 1;
+    }
+    if (max_index != index) {
+        swap_nodes(&heap->values[index], &heap->values[max_index]);
+        return sift_down(heap, max_index);
+    }
+    return max_index;
+}
+
+
+int push(Heap* heap, int index, int value) {
+    if (is_full(heap)) {
+        expand(heap);
+    }
+    heap->values[heap->size].weight = value;
+    heap->values[heap->size].index = index;
+    sift_up(heap, heap->size);
+    heap->size++;
+    return 0;
+}
+
+
+int pop_maximum(Heap* heap, int* index, int* value) {
+    *value = heap->values[0].weight;
+    *index = heap->values[0].index;
+    heap->values[0] = heap->values[--heap->size];
+    return sift_down(heap, 0) + 1;
+}
+
+
+int init_heap(Heap** heap) {
+    *heap = malloc(sizeof(Heap));
+    (*heap)->size = 0;
+    (*heap)->capacity = 1000;
+    (*heap)->values = (Node*)calloc((*heap)->capacity, sizeof(Node));
+    return 0;
+}
+
+
 int swap_int_pointers(int** a, int** b) {
     if (!a || !b) {
         return -1;
@@ -34,24 +128,8 @@ int min(int a, int b) {
 }
 
 
-int get_minimal_weight(int* distances, int* visited, int V) {
-    if (!distances || !visited) {
-        return -1;
-    }
-    int i = 0;
-    int minimum = MAX_WEIGHT;
-    int min_index = -1;
-    for (i = 0; i < V; i++) {
-        if (!visited[i] && distances[i] < minimum) {
-            minimum = distances[i];
-            min_index = i;
-        }
-    }
-    return min_index;
-}
-
-
 void change_weight(
+    Heap* heap,
     int N,
     int M,
     int* distances,
@@ -66,11 +144,12 @@ void change_weight(
     if (target_x >= 0 && target_x < M && target_y >= 0 && target_y < N && !visited[index] && distances[index] > weight) {
         distances[index] = weight;
         previous[index] = parent_y * M + parent_x;
+        push(heap, index, weight);
     }
 }
 
 
-int Prim(int N, int M, int V, int** connections, int* distances, int* visited, int* previous) {
+int Prim(Heap* heap, int N, int M, int V, int** connections, int* distances, int* visited, int* previous) {
     if (!connections) {
         return -1;
     }
@@ -79,8 +158,9 @@ int Prim(int N, int M, int V, int** connections, int* distances, int* visited, i
     int x;
     int y;
     int weight;
+    int value;
     for (visited_amount = 1; visited_amount < V; visited_amount++) {
-        v = get_minimal_weight(distances, visited, V);
+        pop_maximum(heap, &v, &value);
         if (v == -1) {
             return -1;
         }
@@ -93,7 +173,7 @@ int Prim(int N, int M, int V, int** connections, int* distances, int* visited, i
             } else {
                 weight = 2;
             }
-            change_weight(N, M, distances, visited, previous, weight, x-1, y, x, y);
+            change_weight(heap, N, M, distances, visited, previous, weight, x-1, y, x, y);
         }
         if (y - 1 >= 0) {
             if (connections[y - 1][x] == 1 || connections[y - 1][x] == 3) {
@@ -101,47 +181,22 @@ int Prim(int N, int M, int V, int** connections, int* distances, int* visited, i
             } else {
                 weight = 1;
             }
-            change_weight(N, M, distances, visited, previous, weight, x, y-1, x, y);
+            change_weight(heap, N, M, distances, visited, previous, weight, x, y-1, x, y);
         }
         if (connections[y][x] == 2 || connections[y][x] == 3) {
             weight = 0;
         } else {
             weight = 2;
         }
-        change_weight(N, M, distances, visited, previous, weight, x+1, y, x, y);
+        change_weight(heap, N, M, distances, visited, previous, weight, x+1, y, x, y);
         if (connections[y][x] == 1 || connections[y][x] == 3) {
             weight = 0;
         } else {
             weight = 1;
         }
-        change_weight(N, M, distances, visited, previous, weight, x, y+1, x, y);
+        change_weight(heap, N, M, distances, visited, previous, weight, x, y+1, x, y);
     }
     return 1;
-}
-
-
-void quick_sort(int** main_array, int sort_index, int down, int up) {
-    if (down >= up) {
-        return;
-    }
-    int pivot = main_array[(up + down) / 2][sort_index];
-    int left = down;
-    int right = up;
-    while (left <= right) {
-        while (main_array[left][sort_index] < pivot) {
-            left++;
-        }
-        while (pivot < main_array[right][sort_index]) {
-            right--;
-        }
-        if (left <= right) {
-            swap_int_pointers(main_array + left, main_array + right);
-            left++;
-            right--;
-        }
-    }
-    quick_sort(main_array, sort_index, down, right);
-    quick_sort(main_array, sort_index, left, up);
 }
 
 
@@ -162,6 +217,9 @@ int main(void) {
             scanf("%d", connections[i] + j);
         }
     }
+    Heap* heap;
+    init_heap(&heap);
+    push(heap, 0, 0);
     int* previous = calloc(V, sizeof(int));
     for (i = 0; i < V; i++) {
         previous[i] = -1;
@@ -175,7 +233,7 @@ int main(void) {
     int* visited = calloc(V, sizeof(int));
     int target_x;
     int target_y;
-    Prim(N, M, V, connections, distances, visited, previous);
+    Prim(heap, N, M, V, connections, distances, visited, previous);
     for (i = 0; i < V; i++) {
         if (previous[i] != -1) {
             sum += distances[i];
