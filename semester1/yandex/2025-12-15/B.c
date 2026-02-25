@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define MAX_WEIGHT 1000
-
 
 typedef struct Node {
     int key;
@@ -15,14 +13,6 @@ typedef struct Heap {
     int capacity;
     Node* values;
 } Heap;
-
-
-int swap(int* a, int* b) {
-    int tmp = *a;
-    *a = *b;
-    *b = tmp;
-    return 0;
-}
 
 
 int swap_nodes(Node* a, Node* b) {
@@ -39,7 +29,7 @@ int is_full(Heap* heap) {
 
 
 int is_empty(Heap* heap) {
-    return heap->size != 0;
+    return heap->size == 0;
 }
 
 
@@ -103,14 +93,6 @@ int init_heap(Heap** heap) {
 }
 
 
-int min(int a, int b) {
-    if (a < b) {
-        return a;
-    }
-    return b;
-}
-
-
 int change_weight(
     Heap* heap,
     int N,
@@ -136,21 +118,15 @@ int change_weight(
 }
 
 
-
-int double_equal(double a, double b) {
-    return a - b < 1e-10;
-}
-
-
 int main(void) {
     int i;
     int command;
     int key;
+    double old_priority;
     double priority;
     scanf("%d", &command);
     Heap* heap;
     init_heap(&heap);
-    push(heap, 0, 0);
     while (command != 0) {
         switch (command) {
             case 1:
@@ -159,7 +135,7 @@ int main(void) {
                 break;
             case 2:
                 if (is_empty(heap)) {
-                    printf("The P_queue is empty");
+                    printf("The P_queue is empty\n");
                 } else {
                     pop_minimum(heap, &key, &priority);
                     printf("%d %lf\n", key, priority);
@@ -167,24 +143,31 @@ int main(void) {
                 break;
             case 3:
                 if (is_empty(heap)) {
-                    printf("1");
+                    printf("1\n");
                 } else {
-                    printf("0");
+                    printf("0\n");
                 }
                 break;
             case 4:
                 scanf("%d %lf", &key, &priority);
                 for (i = 0; i < heap->size; i++) {
-                    if (double_equal(heap->values[i].key, key)) {
+                    if (heap->values[i].key == key) {
+                        old_priority = heap->values[i].priority;
                         heap->values[i].priority = priority;
+                        if (priority < old_priority) {
+                            sift_up(heap, i);
+                        } else {
+                            sift_down(heap, i);
+                        }
+                        break;
                     }
                 }
                 break;
             default:
                 break;
         }
+        scanf("%d", &command);
     }
-
     free(heap);
     return 0;
 }
