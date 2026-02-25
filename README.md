@@ -13,8 +13,8 @@ gcc my_file.c -Wall -Werror -Wformat-security -Wignored-qualifiers -Winit-self -
 
 ## Яндекс контесты
 ### 2 Cеместр
-[2026-02-19 2. Дейкстра](https://contest.yandex.ru/contest/90464/enter/?retPage=)\
-[2026-02-16 1. Прим/Краскал](https://contest.yandex.ru/contest/90464/enter/?retPage=)
+[2026-02-19 2. Дейкстра](https://contest.yandex.ru/contest/90656/enter)\
+[2026-02-16 1. Прим/Краскал](https://contest.yandex.ru/contest/90464/enter)
 ### 1 Cеместр
 [2025-12-15 12. Прим/Краскал/Очередь с приоритетом](https://contest.yandex.ru/contest/87246/enter)\
 [2025-12-01 11. Способы представления графа](https://contest.yandex.ru/contest/86366/enter)\
