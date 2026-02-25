@@ -52,7 +52,6 @@ int get_minimal_weight(int* distances, int* visited, int V) {
 
 
 void change_weight(
-    int status,
     int N,
     int M,
     int* distances,
@@ -71,7 +70,7 @@ void change_weight(
 }
 
 
-int Prim(int* added_amount, int N, int M, int V, int** connections, int* distances, int* visited, int* previous) {
+int Prim(int N, int M, int V, int** connections, int* distances, int* visited, int* previous) {
     if (!connections) {
         return -1;
     }
@@ -94,7 +93,7 @@ int Prim(int* added_amount, int N, int M, int V, int** connections, int* distanc
             } else {
                 weight = 2;
             }
-            change_weight(connections[y][x], N, M, distances, visited, previous, weight, x-1, y, x, y);
+            change_weight(N, M, distances, visited, previous, weight, x-1, y, x, y);
         }
         if (y - 1 >= 0) {
             if (connections[y - 1][x] == 1 || connections[y - 1][x] == 3) {
@@ -102,20 +101,20 @@ int Prim(int* added_amount, int N, int M, int V, int** connections, int* distanc
             } else {
                 weight = 1;
             }
-            change_weight(connections[y][x], N, M, distances, visited, previous, weight, x, y-1, x, y);
+            change_weight(N, M, distances, visited, previous, weight, x, y-1, x, y);
         }
         if (connections[y][x] == 2 || connections[y][x] == 3) {
             weight = 0;
         } else {
             weight = 2;
         }
-        change_weight(connections[y][x], N, M, distances, visited, previous, weight, x+1, y, x, y);
+        change_weight(N, M, distances, visited, previous, weight, x+1, y, x, y);
         if (connections[y][x] == 1 || connections[y][x] == 3) {
             weight = 0;
         } else {
             weight = 1;
         }
-        change_weight(connections[y][x], N, M, distances, visited, previous, weight, x, y+1, x, y);
+        change_weight(N, M, distances, visited, previous, weight, x, y+1, x, y);
     }
     return 1;
 }
@@ -174,35 +173,37 @@ int main(void) {
     distances[0] = 0;
     int sum = 0;
     int* visited = calloc(V, sizeof(int));
-    int x;
-    int y;
-    Prim(&added_amount, N, M, V, connections, distances, visited, previous);
+    int target_x;
+    int target_y;
+    Prim(N, M, V, connections, distances, visited, previous);
     for (i = 0; i < V; i++) {
-        sum += distances[i];
-        if (distances[i] > 0) {
-            added_amount++;
+        if (previous[i] != -1) {
+            sum += distances[i];
+            if (distances[i] > 0) {
+                added_amount++;
+            }
         }
     }
     int parent_x;
     int parent_y;
     int parent;
-    int weight;
     printf("%d %d\n", added_amount, sum);
+    int top;
+    int left;
     for (i = 0; i < V; i++) {
-        x = i % M;
-        y = i / M;
-        if (distances[i] > 0) {
+        if (previous[i] != -1 && distances[i] > 0) {
+            target_x = i % M;
+            target_y = i / M;
             parent = previous[i];
             parent_x = parent % M;
-            parent_y = i / M;
-            if (x == parent_x) {
-                y = min(y, parent_y);
-                weight = 1;
+            parent_y = parent / M;
+            if (target_x == parent_x) {
+                top = min(target_y, parent_y);
+                printf("%d %d 1\n", top+1, target_x+1);
             } else {
-                x = min(x, parent_x);
-                weight = 2;
+                left = min(target_x, parent_x);
+                printf("%d %d 2\n", target_y+1, left+1);
             }
-            printf("%d %d %d\n", x+1, y+1, weight);
         }
     }
     free(distances);
