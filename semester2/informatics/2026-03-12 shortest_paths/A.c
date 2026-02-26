@@ -137,15 +137,14 @@ int Dijkstra_s_algorithm(int** adjacency_matrix, int N, int* distances, int* vis
         for (w = 0; w < N; w++) {
             if (adjacency_matrix[v][w]
             && !visited[w]
-            && adjacency_matrix[v][w] < distances[w]) {
+            && distances[v] + adjacency_matrix[v][w] < distances[w]) {
                 distances[w] = distances[v] + adjacency_matrix[v][w];
                 previous[w] = v;
             }
         }
+        visited_amount++;
     }
-    for (i = 0; i < N; i++) {
-        answer += distances[i];
-    }
+
     return 1;
 }
 
@@ -187,11 +186,11 @@ int free_adjacency_matrix(int** adjacency_matrix, int N) {
 
 int main(void) {
     int N;
-    int S;
-    int F;
+    int from;
+    int to;
     int i;
     int j;
-    scanf("%d %d %d", &N, &S, &F);
+    scanf("%d %d %d", &N, &from, &to);
     int** adjacency_matrix = set_adjacency_matrix(N);
     int* previous = calloc(N, sizeof(int));
     for (i = 0; i < N; i++) {
@@ -201,10 +200,10 @@ int main(void) {
     for (i = 0; i < N; i++) {
         distances[i] = MAX_WEIGHT;
     }
-    distances[0] = 0;
-    int sum = 0;
+    distances[from] = 0;
     int* visited = calloc(N, sizeof(int));
     Dijkstra_s_algorithm(adjacency_matrix, N, distances, visited, previous);
+    printf("%d", distances[to]);
     free_adjacency_matrix(adjacency_matrix, N);
     return 0;
 }
