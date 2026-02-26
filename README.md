@@ -33,5 +33,8 @@ gcc my_file.c -Wall -Werror -Wformat-security -Wignored-qualifiers -Winit-self -
 
 [Информатикс](https://informatics.msk.ru/enrol/index.php?id=6308)\
 [Сайт мехмата по проге](https://serg.tk/)\
-[Си пи пи референс](https://cppreference.com/)\
-![bloroda](bloroda.jpg "Me")
+[cppreference](https://cppreference.com/)
+
+Злой программист охраняет мой репозиторий:
+
+![bloroda](bloroda.jpg "Злой программист охраняет мой репозиторий")
