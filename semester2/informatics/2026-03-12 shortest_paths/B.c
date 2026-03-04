@@ -113,7 +113,6 @@ int Dijkstra_s_algorithm(Heap* heap, int** adjacency_matrix, int N, int* distanc
     }
     int v;
     int w;
-    int visited_amount = 0;
     int value;
     while (heap->size > 0) {
         pop_minimum(heap, &v, &value);
@@ -130,7 +129,6 @@ int Dijkstra_s_algorithm(Heap* heap, int** adjacency_matrix, int N, int* distanc
                 push(heap, w, distances[v] + adjacency_matrix[v][w]);
             }
         }
-        visited_amount++;
     }
     return 1;
 }
@@ -167,13 +165,13 @@ int free_adjacency_matrix(int** adjacency_matrix, int N) {
 
 int main(void) {
     int N;
+    int E;
+    int M;
     int from;
     int to;
     int i;
-    scanf("%d %d %d", &N, &from, &to);
-    from--;
-    to--;
-    int** adjacency_matrix = set_adjacency_matrix(N);
+    scanf("%d %d %d", &N, &E, &M);
+    int** adjacency_matrix = set_adjacency_matrix(M);
     int* previous = calloc(N, sizeof(int));
     for (i = 0; i < N; i++) {
         previous[i] = -1;
