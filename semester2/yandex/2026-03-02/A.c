@@ -55,6 +55,7 @@ int Ford_Fulkerson_algorithm(int** adjacency_matrix, int V, int s, int t, int* v
     int u;
     int v;
     int minimal_edge = INT_MAX;
+    int cycle = 0;
     while (DFS_recursive(adjacency_matrix, visited, s, s, t, V, &minimal_edge, path, &size)) {
         for (i = 0; i < size; i++) {
             u = path[i][0];
@@ -65,8 +66,9 @@ int Ford_Fulkerson_algorithm(int** adjacency_matrix, int V, int s, int t, int* v
         size = 0;
         clear_visited(visited, V);
         minimal_edge = INT_MAX;
+        cycle++;
     }
-    return 1;
+    return cycle;
 }
 
 
@@ -142,14 +144,17 @@ int main(void) {
     int* visited;
     int** path;
     set_arrays(V, adjacency_matrix, &visited, &path);
-    Ford_Fulkerson_algorithm(adjacency_matrix, V, s, t, visited, path);
-    int sum = 0;
-    for (i = 0; i < V; i++) {
-        if (adjacency_matrix[t][i]) {
-            sum -= adjacency_matrix[t][i];
+    if (Ford_Fulkerson_algorithm(adjacency_matrix, V, s, t, visited, path)) {
+        int sum = 0;
+        for (i = 0; i < V; i++) {
+            if (adjacency_matrix[t][i]) {
+                sum -= adjacency_matrix[t][i];
+            }
         }
+        printf("%d", sum);
+    } else {
+        printf("The source and sink nodes are already disconnected");
     }
-    printf("%d", sum);
     free_adjacency_matrix(&adjacency_matrix, V);
     free_arrays(V, &visited, &path);
     return 0;
