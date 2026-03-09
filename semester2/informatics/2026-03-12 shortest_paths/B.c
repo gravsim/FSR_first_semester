@@ -4,6 +4,82 @@
 #define MAX_WEIGHT 1000
 
 
+typedef struct Edge {
+    int to;
+    int to_time;
+    int from_time;
+    struct Edge* next;
+} Edge;
+
+
+int swap_int_pointers(int** a, int** b) {
+    if (!a || !b) {
+        return -1;
+    }
+    int* tmp = *a;
+    *a = *b;
+    *b = tmp;
+    return 1;
+}
+
+
+int swap_int(int* a, int* b) {
+    if (!a || !b) {
+        return -1;
+    }
+    int tmp = *a;
+    *a = *b;
+    *b = tmp;
+    return 1;
+}
+
+
+int get_minimal_weight(int** distances, int* visited, int V) {
+    if (!distances || !visited) {
+        return -1;
+    }
+    int i = 0;
+    int minimum = MAX_WEIGHT;
+    int min_index = -1;
+    for (i = 0; i < V; i++) {
+        if (!visited[i] && distances[i][1] < minimum) {
+            minimum = distances[i][1];
+            min_index = i;
+        }
+    }
+    return min_index;
+}
+
+
+Edge** set_adjacency_list(int V, int M) {
+    int i;
+    int j;
+    Edge** adjacency_list = calloc(V, sizeof(Edge*));
+    int from;
+    int to;
+    int K;
+    int from_time;
+    int to_time;
+    for (i = 0; i < M; i++) {
+        scanf("%d", &K);
+        scanf("%d %d", &from, &from_time);
+        from--;
+        for (j = 0; j < K - 1; j++) {
+            scanf("%d %d", &to, &to_time);
+            to--;
+            Edge* edge1 = malloc(sizeof(Edge));
+            edge1->from_time = from_time;
+            edge1->to_time = to_time;
+            edge1->next = adjacency_list[from];
+            adjacency_list[from] = edge1;
+            edge1->to = to;
+            from = to;
+        }
+    }
+    return adjacency_list;
+}
+
+
 typedef struct Node {
     int index;
     int weight;
@@ -90,107 +166,66 @@ int init_heap(Heap** heap) {
 }
 
 
-int get_minimal_weight(int* distances, int* visited, int V) {
-    if (!distances || !visited) {
-        return -1;
-    }
-    int i = 0;
-    int minimum = MAX_WEIGHT;
-    int min_index = -1;
-    for (i = 0; i < V; i++) {
-        if (!visited[i] && distances[i] < minimum) {
-            minimum = distances[i];
-            min_index = i;
-        }
-    }
-    return min_index;
-}
-
-
-int Dijkstra_s_algorithm(Heap* heap, int** adjacency_matrix, int N, int* distances, int* visited, int* previous) {
-    if (!adjacency_matrix || !visited || !distances || !previous) {
+int Dijkstra_algorithm(Heap* heap, Edge** adjacency_list, int V, int* distances, int* visited) {
+    if (!adjacency_list || !visited || !distances) {
         return -1;
     }
     int v;
     int w;
     int value;
+    int delta_time;
     while (heap->size > 0) {
         pop_minimum(heap, &v, &value);
         if (v == -1) {
             return -1;
         }
         visited[v] = 1;
-        for (w = 0; w < N; w++) {
-            if (adjacency_matrix[v][w] != -1
-            && !visited[w]
-            && distances[v] + adjacency_matrix[v][w] < distances[w]) {
-                distances[w] = distances[v] + adjacency_matrix[v][w];
-                previous[w] = v;
-                push(heap, w, distances[v] + adjacency_matrix[v][w]);
+        Edge* current = adjacency_list[v];
+        while (current) {
+            w = current->to;
+            delta_time = current->to_time - current->from_time;
+            if (current->from_time > distances[v] &&
+                !visited[w]
+            && current->to_time < distances[w]) {
+                distances[w] = current->to_time;
+                push(heap, w, current->to_time);
             }
+            current = current->next;
         }
     }
-    return 1;
-}
-
-
-int** set_adjacency_matrix(int N) {
-    int i;
-    int j;
-    int** adjacency_matrix = calloc(N, sizeof(int*));
-    for (i = 0; i < N; i++) {
-        adjacency_matrix[i] = calloc(N, sizeof(int));
-    }
-    for (i = 0; i < N; i++) {
-        for (j = 0; j < N; j++) {
-            scanf("%d", adjacency_matrix[i] + j);
-        }
-    }
-    return adjacency_matrix;
-}
-
-
-int free_adjacency_matrix(int** adjacency_matrix, int N) {
-    if (!adjacency_matrix) {
-        return -1;
-    }
-    int i;
-    for (i = 0; i < N; i++) {
-        free(adjacency_matrix[i]);
-    }
-    free(adjacency_matrix);
     return 1;
 }
 
 
 int main(void) {
-    int N;
-    int E;
-    int M;
-    int from;
+    int V;
     int to;
+    int trains;
     int i;
-    scanf("%d %d %d", &N, &E, &M);
-    int** adjacency_matrix = set_adjacency_matrix(M);
-    int* previous = calloc(N, sizeof(int));
-    for (i = 0; i < N; i++) {
-        previous[i] = -1;
-    }
-    int* distances = calloc(N, sizeof(int));
-    for (i = 0; i < N; i++) {
+    scanf("%d %d %d", &V, &to, &trains);
+    to--;
+    Edge** adjacency_matrix = set_adjacency_list(V, trains);
+
+    int* distances = calloc(V, sizeof(int));
+    for (i = 0; i < V; i++) {
         distances[i] = MAX_WEIGHT;
     }
-    distances[from] = 0;
-    int* visited = calloc(N, sizeof(int));
+    distances[0] = 0;
+    int* visited = calloc(V, sizeof(int));
     Heap* heap;
     init_heap(&heap);
-    push(heap, from, 0);
-    Dijkstra_s_algorithm(heap, adjacency_matrix, N, distances, visited, previous);
+    push(heap, 0, 0);
+    Dijkstra_algorithm(heap, adjacency_matrix, V, distances, visited);
+    // printf("\n");
+    // for (i = 0; i < V; i++) {
+    //     printf("%d ", distances[i]);
+    // }
+    // printf("\n");
     if (distances[to] == MAX_WEIGHT) {
         printf("-1");
     } else {
         printf("%d", distances[to]);
     }
-    free_adjacency_matrix(adjacency_matrix, N);
+
     return 0;
 }
