@@ -3,6 +3,8 @@
 #include <limits.h>
 
 
+#define HEAP_CAPACITY 1000
+
 typedef struct Edge {
     int to;
     int to_time;
@@ -146,19 +148,46 @@ int pop_minimum(Heap* heap, int* index, int* value) {
 int init_heap(Heap** heap) {
     *heap = malloc(sizeof(Heap));
     (*heap)->size = 0;
-    (*heap)->capacity = 1000;
+    (*heap)->capacity = HEAP_CAPACITY;
     (*heap)->values = (Node*)calloc((*heap)->capacity, sizeof(Node));
     return 0;
 }
 
 
-int Dijkstra_algorithm(Heap* heap, int** adjacency_matrix, int V, int* distances, int* visited, int* previous) {
-    if (!adjacency_matrix || !visited || !distances || !previous) {
+int check_vertex(Heap* heap,
+    int N,
+    int M,
+    int** connections,
+    int* distances,
+    int* visited,
+    int x,
+    int y,
+    int parent_x,
+    int parent_y) {
+    int index = y * M + x;
+    int parent_index = parent_y * M + parent_x;
+    if (x >= 0
+        && x < M
+        && y >= 0
+        && y < N
+        && connections[y][x] != 1
+        && !visited[index]
+        && distances[index] > distances[parent_index] + 1) {
+        distances[index] = distances[parent_index] + 1;
+        push(heap, index, distances[index]);
+    }
+    return 1;
+}
+
+
+int Dijkstra_algorithm(int N, int M, Heap* heap, int** connections, int V, int* distances, int* visited, int* previous) {
+    if (!connections || !visited || !distances || !previous) {
         return -1;
     }
     int v;
-    int w;
     int value;
+    int x;
+    int y;
     while (heap->size > 0) {
         pop_minimum(heap, &v, &value);
         if (v == -1) {
@@ -166,15 +195,12 @@ int Dijkstra_algorithm(Heap* heap, int** adjacency_matrix, int V, int* distances
         }
         if (!visited[v]) {
             visited[v] = 1;
-            for (w = 0; w < V; w++) {
-                if (adjacency_matrix[v][w] != 1
-                && !visited[w]
-                && distances[v] + adjacency_matrix[v][w] < distances[w]) {
-                    distances[w] = distances[v] + adjacency_matrix[v][w];
-                    previous[w] = v;
-                    push(heap, w, distances[v] + adjacency_matrix[v][w]);
-                }
-            }
+            x = v % M;
+            y = v / M;
+            check_vertex(heap, N, M, connections, distances, visited, x+1, y, x, y);
+            check_vertex(heap, N, M, connections, distances, visited, x-1, y, x, y);
+            check_vertex(heap, N, M, connections, distances, visited, x, y+1, x, y);
+            check_vertex(heap, N, M, connections, distances, visited, x, y-1, x, y);
         }
     }
     return 1;
@@ -185,8 +211,8 @@ int main(void) {
     int K;
     int N;
     int M;
-    int to;
-    int from;
+    int to = -1;
+    int from = -1;
     int i;
     int j;
     scanf("%d %d %d", &K, &N, &M);
@@ -199,26 +225,26 @@ int main(void) {
         for (j = 0; j < M; j++) {
             scanf("%d", connections[i] + j);
             if (connections[i][j] == 2) {
-                from = i * N + j;
+                from = i * M + j;
             } else if (connections[i][j] == 3) {
-                to = i * N + j;
+                to = i * M + j;
             }
         }
     }
-    int* previous = calloc(N, sizeof(int));
-    for (i = 0; i < N; i++) {
+    int* previous = calloc(V, sizeof(int));
+    for (i = 0; i < V; i++) {
         previous[i] = -1;
     }
-    int* distances = calloc(N, sizeof(int));
-    for (i = 0; i < N; i++) {
+    int* distances = calloc(V, sizeof(int));
+    for (i = 0; i < V; i++) {
         distances[i] = INT_MAX;
     }
     distances[from] = 0;
-    int* visited = calloc(N, sizeof(int));
+    int* visited = calloc(V, sizeof(int));
     Heap* heap;
     init_heap(&heap);
-    push(heap, 0, 0);
-    Dijkstra_algorithm(heap, connections, V, distances, visited, previous);
+    push(heap, from, 0);
+    Dijkstra_algorithm(N, M, heap, connections, V, distances, visited, previous);
     if (distances[to] == INT_MAX) {
         printf("-1");
     } else {
