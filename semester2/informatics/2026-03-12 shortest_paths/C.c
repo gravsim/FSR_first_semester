@@ -5,68 +5,6 @@
 
 #define HEAP_CAPACITY 1000
 
-typedef struct Edge {
-    int to;
-    int to_time;
-    int from_time;
-    struct Edge* next;
-} Edge;
-
-
-Edge** set_adjacency_list(int V, int M) {
-    int i;
-    int j;
-    Edge** adjacency_list = calloc(V, sizeof(Edge*));
-    int from;
-    int to;
-    int K;
-    int from_time;
-    int to_time;
-    for (i = 0; i < M; i++) {
-        scanf("%d", &K);
-        scanf("%d %d", &from, &from_time);
-        from--;
-        for (j = 0; j < K - 1; j++) {
-            scanf("%d %d", &to, &to_time);
-            to--;
-            Edge* edge1 = malloc(sizeof(Edge));
-            edge1->from_time = from_time;
-            edge1->to_time = to_time;
-            edge1->next = adjacency_list[from];
-            adjacency_list[from] = edge1;
-            edge1->to = to;
-            from = to;
-            from_time = to_time;
-        }
-    }
-    return adjacency_list;
-}
-
-
-void free_list(Edge** head) {
-    Edge* current = *head;
-    Edge* next;
-    while (current) {
-        next = current->next;
-        free(current);
-        current = next;
-    }
-    *head = NULL;
-}
-
-
-int free_adjacency_list(Edge** adjacency_list, int V) {
-    if (!adjacency_list) {
-        return -1;
-    }
-    int i;
-    for (i = 0; i < V; i++) {
-        free_list(adjacency_list + i);
-    }
-    free(adjacency_list);
-    return 1;
-}
-
 
 typedef struct Node {
     int index;
@@ -154,54 +92,93 @@ int init_heap(Heap** heap) {
 }
 
 
+int is_right_turn(int* vector1, int* vector2) {
+    return vector1[0] * vector2[1] - vector2[0] * vector1[1] < 0;
+}
+
+
 int check_vertex(Heap* heap,
+    int K,
     int N,
     int M,
+    int* direction,
     int** connections,
     int* distances,
+    int** directions,
+    int* right_turns,
     int* visited,
-    int x,
-    int y,
     int parent_x,
     int parent_y) {
+
+    int y = parent_y + direction[0];
+    int x = parent_x + direction[1];
     int index = y * M + x;
     int parent_index = parent_y * M + parent_x;
+
     if (x >= 0
         && x < M
         && y >= 0
         && y < N
         && connections[y][x] != 1
-        && !visited[index]
         && distances[index] > distances[parent_index] + 1) {
-        distances[index] = distances[parent_index] + 1;
-        push(heap, index, distances[index]);
+
+        if (is_right_turn(directions[parent_index], direction)) {
+            right_turns[index] = right_turns[parent_index] + 1;
+            if (right_turns[index] <= K) {
+                directions[index][0] = direction[0];
+                directions[index][1] = direction[1];
+                distances[index] = distances[parent_index] + 1;
+                push(heap, index, distances[index]);
+            }
+        } else {
+            right_turns[index] = right_turns[parent_index];
+            directions[index][0] = direction[0];
+            directions[index][1] = direction[1];
+            distances[index] = distances[parent_index] + 1;
+            push(heap, index, distances[index]);
+        }
+
     }
     return 1;
 }
 
 
-int Dijkstra_algorithm(int N, int M, Heap* heap, int** connections, int V, int* distances, int* visited, int* previous) {
-    if (!connections || !visited || !distances || !previous) {
+int Dijkstra_algorithm(
+    int K,
+    int N,
+    int M,
+    Heap* heap,
+    int** connections,
+    int V,
+    int* distances,
+    int** directions,
+    int* right_turns,
+    int* visited) {
+    if (!connections || !visited || !distances) {
         return -1;
     }
     int v;
     int value;
-    int x;
-    int y;
+    int paretn_x;
+    int parent_y;
+    int up[2] = {-1, 0};
+    int down[2] = {1, 0};
+    int right[2] = {0, 1};
+    int left[2] = {0, -1};
+
     while (heap->size > 0) {
         pop_minimum(heap, &v, &value);
         if (v == -1) {
             return -1;
         }
-        if (!visited[v]) {
-            visited[v] = 1;
-            x = v % M;
-            y = v / M;
-            check_vertex(heap, N, M, connections, distances, visited, x+1, y, x, y);
-            check_vertex(heap, N, M, connections, distances, visited, x-1, y, x, y);
-            check_vertex(heap, N, M, connections, distances, visited, x, y+1, x, y);
-            check_vertex(heap, N, M, connections, distances, visited, x, y-1, x, y);
-        }
+
+            paretn_x = v % M;
+            parent_y = v / M;
+            check_vertex(heap, K, N, M, up, connections, distances, directions, right_turns, visited, paretn_x, parent_y);
+            check_vertex(heap, K, N, M, down, connections, distances, directions, right_turns, visited, paretn_x, parent_y);
+            check_vertex(heap, K, N, M, right, connections, distances, directions, right_turns, visited, paretn_x, parent_y);
+            check_vertex(heap, K, N, M, left, connections, distances, directions, right_turns, visited, paretn_x, parent_y);
+
     }
     return 1;
 }
@@ -231,20 +208,23 @@ int main(void) {
             }
         }
     }
-    int* previous = calloc(V, sizeof(int));
-    for (i = 0; i < V; i++) {
-        previous[i] = -1;
-    }
     int* distances = calloc(V, sizeof(int));
     for (i = 0; i < V; i++) {
         distances[i] = INT_MAX;
     }
     distances[from] = 0;
+    int** directions = calloc(V, sizeof(int*));
+    for (i = 0; i < V; i++) {
+        directions[i] = calloc(2, sizeof(int));
+    }
+    int* right_turns = calloc(V, sizeof(int));
     int* visited = calloc(V, sizeof(int));
     Heap* heap;
     init_heap(&heap);
+    directions[from][0] = 0;
+    directions[from][1] = 1;
     push(heap, from, 0);
-    Dijkstra_algorithm(N, M, heap, connections, V, distances, visited, previous);
+    Dijkstra_algorithm(K, N, M, heap, connections, V, distances, directions, right_turns, visited);
     if (distances[to] == INT_MAX) {
         printf("-1");
     } else {
