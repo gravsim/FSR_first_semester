@@ -31,6 +31,7 @@ int DFS_recursive(int** adjacency_matrix,
             if (DFS_recursive(adjacency_matrix, visited, i, source, target, V, minimal_edge, path, size)) {
                 return 1;
             }
+            (*size)--;
         }
     }
     return 0;

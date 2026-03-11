@@ -60,6 +60,7 @@ int DFS_recursive(int** adjacency_matrix,
             if (DFS_recursive(adjacency_matrix, visited, i, source, target, V, minimal_edge, path, size)) {
                 return 1;
             }
+            (*size)--;
         }
     }
     return 0;
@@ -175,9 +176,7 @@ int read_dots(int E, int* dots_amount, Dot* dots, Dot* from_s, Dot* to_s, int* s
     int i;
     Dot s_dot;
     Dot t_dot;
-    long** edges = calloc(E, sizeof(long*));
     for (i = 0; i < E; i++) {
-        edges[i] = calloc(2, sizeof(long));
         scanf("%ld %ld %ld %ld", &from_s[i].x, &from_s[i].y, &to_s[i].x, &to_s[i].y);
         if (find_dot(dots, *dots_amount, from_s[i]) == -1) {
             dots[*dots_amount] = from_s[i];
@@ -189,12 +188,22 @@ int read_dots(int E, int* dots_amount, Dot* dots, Dot* from_s, Dot* to_s, int* s
         }
     }
     scanf("%ld %ld %ld %ld", &s_dot.x, &s_dot.y, &t_dot.x, &t_dot.y);
-    dots[*dots_amount] = s_dot;
-    (*dots_amount)++;
-    dots[*dots_amount] = t_dot;
-    (*dots_amount)++;
-    *s_index = find_dot(dots, *dots_amount, s_dot);
-    *t_index = find_dot(dots, *dots_amount, t_dot);
+    int index = find_dot(dots, *dots_amount, s_dot);
+    if (index == -1) {
+        dots[*dots_amount] = s_dot;
+        *s_index = *dots_amount;
+        (*dots_amount)++;
+    } else {
+        *s_index = index;
+    }
+    index = find_dot(dots, *dots_amount, t_dot);
+    if (index == -1) {
+        dots[*dots_amount] = t_dot;
+        *t_index = *dots_amount;
+        (*dots_amount)++;
+    } else {
+        *t_index = index;
+    }
     return 1;
 }
 
@@ -252,7 +261,7 @@ int main(void) {
     int s_index;
     int t_index;
     scanf("%d", &E);
-    Dot* dots = calloc(2 * E, sizeof(Dot));
+    Dot* dots = calloc(2 * E + 2, sizeof(Dot));
     Dot* from_s = calloc(E, sizeof(Dot));
     Dot* to_s = calloc(E, sizeof(Dot));
     int dots_amount = 0;
@@ -266,5 +275,8 @@ int main(void) {
     printf("%d", Ford_Fulkerson_algorithm(adjacency_matrix, V, 2 * s_index + 1, 2 * t_index, visited, path));
     free_adjacency_matrix(&adjacency_matrix, V);
     free_arrays(V, &visited, &path);
+    free(dots);
+    free(from_s);
+    free(to_s);
     return 0;
 }

@@ -108,7 +108,6 @@ int set_arrays(int V, int** adjacency_matrix, int** visited, int*** path) {
         return -1;
     }
     int i;
-    int j;
     *visited = calloc(V, sizeof(int));
     *path = calloc(V, sizeof(int*));
     for (i = 0; i < V; i++) {
