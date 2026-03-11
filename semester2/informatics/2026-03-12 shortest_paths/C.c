@@ -5,6 +5,8 @@
 
 #define HEAP_CAPACITY 1000
 #define MAX_DIRECTIONS 4
+#define FROM_FLAG 2
+#define TO_FLAG 3
 
 
 typedef struct Node {
@@ -181,10 +183,10 @@ int main(void) {
     for (i = 0; i < N; i++) {
         for (j = 0; j < M; j++) {
             scanf("%d", connections[i] + j);
-            if (connections[i][j] == 2) {
+            if (connections[i][j] == FROM_FLAG) {
                 from_y = i;
                 from_x = j;
-            } else if (connections[i][j] == 3) {
+            } else if (connections[i][j] == TO_FLAG) {
                 to_y = i;
                 to_x = j;
             }
@@ -201,7 +203,6 @@ int main(void) {
                     distances[i][j][k][l] = INT_MAX;
                 }
             }
-
         }
     }
     Heap* heap;
@@ -224,6 +225,17 @@ int main(void) {
     } else {
         printf("%d", answer);
     }
+    for (i = 0; i < N; i++) {
+        for (j = 0; j < M; j++) {
+            for (k = 0; k < MAX_DIRECTIONS; k++) {
+                free(distances[i][j][k]);
+            }
+            free(distances[i][j]);
+        }
+        free(distances[i]);
+        free(connections[i]);
+    }
+    free(connections);
     free(distances);
     free(heap->values);
     free(heap);
