@@ -1,11 +1,10 @@
+#include <float.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
 
-#define CUP_WEIGHT 100
-#define TRUCK_WEIGHT 3000000
-#define MAX_TIME 1440
-#define ORDER 10000000
+#define MAX_DISTANCE 10000
+
 
 
 int min(int a, int b) {
@@ -136,9 +135,6 @@ int** set_adjacency_matrix(int V) {
 
 
 
-
-
-
 int Dijkstra_algorithm(Heap* heap,
     int** adjacency_matrix,
     int V,
@@ -154,7 +150,7 @@ int Dijkstra_algorithm(Heap* heap,
     int v;
     int w;
     double value;
-    double aboba;
+    double new_time;
     while (heap->size > 0) {
         pop_minimum(heap, &v, &value);
         if (v == -1) {
@@ -163,10 +159,10 @@ int Dijkstra_algorithm(Heap* heap,
         if (!visited[v]) {
             visited[v] = 1;
             for (w = 0; w < V; w++) {
-                aboba = preparation_times[w] + Floyd_distances[w][v] / speeds[w];
+                new_time = preparation_times[w] + (double)Floyd_distances[w][v] / (double)speeds[w];
                 if (!visited[w]
-                && distances[v] + aboba < distances[w]) {
-                    distances[w] = distances[v] + aboba;
+                && distances[v] + new_time < distances[w]) {
+                    distances[w] = distances[v] + new_time;
                     next[w] = v;
                     push(heap, w, distances[w]);
                 }
@@ -184,7 +180,7 @@ int Floyd_Warshall_algorithm(int** adjacency_matrix, int n, int** distances, int
     int i;
     int j;
     int k;
-    for (k = 0; k < n - 1; k++) {
+    for (k = 0; k < n; k++) {
         for (i = 0; i < n; i++) {
             for (j = 0; j < n; j++) {
                 if (distances[i][j] > distances[i][k] + distances[k][j]) {
@@ -226,7 +222,7 @@ int set_arrays(int n, int** adjacency_matrix, int*** previous, int*** distances)
             } else if (adjacency_matrix[i][j]) {
                 (*distances)[i][j] = adjacency_matrix[i][j];
             } else {
-                (*distances)[i][j] = INT_MAX;
+                (*distances)[i][j] = MAX_DISTANCE;
             }
         }
     }
@@ -235,17 +231,17 @@ int set_arrays(int n, int** adjacency_matrix, int*** previous, int*** distances)
 
 
 int print_arr_recursive(int i, int* array) {
+
     if (i != -1) {
-        printf("%d ", array[i]);
+        printf("%d ", i + 1);
         print_arr_recursive(array[i], array);
     }
-
     return 1;
 }
 
 
 int print_answer(int V, double* distances, int* next) {
-    double max_time = INT_MIN;
+    double max_time = -1.0;
     int max_start;
     int i;
     for (i = 0; i < V; i++) {
@@ -273,7 +269,7 @@ int main(void) {
     int** adjacency_matrix = set_adjacency_matrix(V);
     double* distances = calloc(V, sizeof(double));
     for (i = 0; i < V; i++) {
-        distances[i] = INT_MAX;
+        distances[i] = DBL_MAX;
     }
     int* visited = calloc(V, sizeof(int));
     int* next = calloc(V, sizeof(int));
