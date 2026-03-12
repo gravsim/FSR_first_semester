@@ -12,14 +12,6 @@ typedef struct Edge {
 } Edge;
 
 
-int min(int a, int b) {
-    if (a < b) {
-        return a;
-    }
-    return b;
-}
-
-
 void free_list(Edge** head) {
     Edge* current = *head;
     Edge* next;
@@ -328,5 +320,15 @@ int main(void) {
     free_adjacency_list(adjacency_list, V);
     strong_Dijkstra_algorithm(heap, V, distances, visited, next, preparation_times, speeds, Floyd_distances);
     print_answer(V, distances, next);
+    free_heap(heap);
+    free(preparation_times);
+    free(speeds);
+    free(visited);
+    free(next);
+    free(distances);
+    for (i = 0; i < V; i++) {
+        free(Floyd_distances[i]);
+    }
+    free(Floyd_distances);
     return 0;
 }
