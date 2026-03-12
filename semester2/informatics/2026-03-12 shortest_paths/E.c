@@ -132,7 +132,7 @@ int** set_adjacency_matrix(int V) {
 }
 
 
-int Dijkstra_algorithm(Heap* heap,
+int strong_Dijkstra_algorithm(Heap* heap,
     int V,
     double* distances,
     int* visited,
@@ -140,7 +140,7 @@ int Dijkstra_algorithm(Heap* heap,
     int* preparation_times,
     int* speeds,
     int** Floyd_distances) {
-    if (!visited || !distances || !next) {
+    if (!visited || !distances || !next || !preparation_times || !speeds) {
         return -1;
     }
     int v;
@@ -169,22 +169,25 @@ int Dijkstra_algorithm(Heap* heap,
 }
 
 
-int Floyd_Warshall_algorithm(int** adjacency_matrix, int n, int** distances, int** previous) {
-    if (!adjacency_matrix || !distances || !previous) {
+int Dijkstra_s_algorithm(Heap* heap, int** adjacency_matrix, int V, int* distances, int* visited) {
+    if (!adjacency_matrix || !visited || !distances) {
         return -1;
     }
-    int i;
-    int j;
-    int k;
-    for (k = 0; k < n; k++) {
-        for (i = 0; i < n; i++) {
-            for (j = 0; j < n; j++) {
-                if (distances[i][k] != INT_MAX
-                    && distances[k][j] != INT_MAX
-                    && distances[i][j] > distances[i][k] + distances[k][j]) {
-                    distances[i][j] = distances[i][k] + distances[k][j];
-                    previous[i][j] = previous[k][j];
-                }
+    int v;
+    int w;
+    double value;
+    while (heap->size > 0) {
+        pop_minimum(heap, &v, &value);
+        if (v == -1) {
+            return -1;
+        }
+        visited[v] = 1;
+        for (w = 0; w < V; w++) {
+            if (adjacency_matrix[v][w] > 0
+            && !visited[w]
+            && distances[v] + adjacency_matrix[v][w] < distances[w]) {
+                distances[w] = distances[v] + adjacency_matrix[v][w];
+                push(heap, w, distances[v] + adjacency_matrix[v][w]);
             }
         }
     }
@@ -192,43 +195,30 @@ int Floyd_Warshall_algorithm(int** adjacency_matrix, int n, int** distances, int
 }
 
 
-
-int set_arrays(int n, int** adjacency_matrix, int*** Floyd_previous, int*** Floyd_distances) {
-    if (!adjacency_matrix || !Floyd_previous || !Floyd_distances) {
+int set_arrays(int n, int** adjacency_matrix, int*** Floyd_distances) {
+    if (!adjacency_matrix || !Floyd_distances) {
         return -1;
     }
     int i;
     int j;
-    *Floyd_previous = calloc(n, sizeof(int*));
-    for (i = 0; i < n; i++) {
-        (*Floyd_previous)[i] = calloc(n, sizeof(int));
-        for (j = 0; j < n; j++) {
-            if (adjacency_matrix[i][j]) {
-                (*Floyd_previous)[i][j] = i;
-            } else {
-                (*Floyd_previous)[i][j] = -1;
-            }
-
-        }
-    }
     *Floyd_distances = calloc(n, sizeof(int*));
     for (i = 0; i < n; i++) {
         (*Floyd_distances)[i] = calloc(n, sizeof(int));
         for (j = 0; j < n; j++) {
-            if (i == j) {
-                (*Floyd_distances)[i][j] = 0;
-            } else if (adjacency_matrix[i][j]) {
-                (*Floyd_distances)[i][j] = adjacency_matrix[i][j];
-            } else {
-                (*Floyd_distances)[i][j] = INT_MAX;
-            }
+            (*Floyd_distances)[i][j] = INT_MAX;
         }
+    }
+    for (i = 0; i < n; i++) {
+        (*Floyd_distances)[i][i] = 0;
     }
     return 1;
 }
 
 
 int print_arr_recursive(int i, int* array) {
+    if (!array) {
+        return -1;
+    }
     if (i != -1) {
         printf("%d ", i + 1);
         print_arr_recursive(array[i], array);
@@ -238,8 +228,11 @@ int print_arr_recursive(int i, int* array) {
 
 
 int print_answer(int V, double* distances, int* next) {
+    if (!distances) {
+        return -1;
+    }
     double max_time = -1.0;
-    int max_start;
+    int max_start = -1;
     int i;
     for (i = 0; i < V; i++) {
         if (distances[i] > max_time) {
@@ -252,6 +245,24 @@ int print_answer(int V, double* distances, int* next) {
     return 1;
 }
 
+
+int free_heap(Heap* heap) {
+    if (!heap) {
+        return -1;
+    }
+    free(heap->values);
+    free(heap);
+    return 1;
+}
+
+
+int clear_visited(int* visited, int V) {
+    int i;
+    for ( i = 0; i < V; i++) {
+        visited[i] = 0;
+    }
+    return 0;
+}
 
 
 int main(void) {
@@ -272,14 +283,21 @@ int main(void) {
     distances[0] = 0.0;
     preparation_times[0] = 0;
     int** Floyd_distances;
-    int** Floyd_previous;
-    set_arrays(V, adjacency_matrix, &Floyd_previous, &Floyd_distances);
-    Floyd_Warshall_algorithm(adjacency_matrix, V, Floyd_distances, Floyd_previous);
-    free_adjacency_matrix(adjacency_matrix, V);
+    set_arrays(V, adjacency_matrix, &Floyd_distances);
     Heap* heap;
     init_heap(&heap);
     push(heap, 0, 0);
-    Dijkstra_algorithm(heap, V, distances, visited, next, preparation_times, speeds, Floyd_distances);
+    for (i = 0; i < V; i++) {
+        init_heap(&heap);
+        push(heap, i, 0);
+        Dijkstra_s_algorithm(heap, adjacency_matrix, V, Floyd_distances[i], visited);
+        free_heap(heap);
+        clear_visited(visited, V);
+    }
+    init_heap(&heap);
+    push(heap, 0, 0);
+    free_adjacency_matrix(adjacency_matrix, V);
+    strong_Dijkstra_algorithm(heap, V, distances, visited, next, preparation_times, speeds, Floyd_distances);
     print_answer(V, distances, next);
     return 0;
 }
