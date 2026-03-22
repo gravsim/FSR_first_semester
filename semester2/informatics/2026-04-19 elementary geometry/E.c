@@ -23,14 +23,12 @@ double get_norm(vec2 vector) {
 
 
 vec2 normalize(vec2 vector) {
-    vec2 difference = {vector.x / get_norm(vector), vector.y / get_norm(vector)};
-    return difference;
+    return (vec2){vector.x / get_norm(vector), vector.y / get_norm(vector)};
 }
 
 
-vec2 subtract(vec2 v1, vec2 v2) {
-    vec2 res = {v1.x - v2.x, v1.y - v2.y};
-    return res;
+vec2 subtract(vec2 vector1, vec2 vector2) {
+    return (vec2){vector1.x - vector2.x, vector1.y - vector2.y};
 }
 
 
@@ -118,7 +116,7 @@ void Jarvis_algorithm(int n, vec2* vertices, vec2* convex_vertices, int* convex_
     (*convex_size)++;
 
     vec2 point1= convex_vertices[0];
-    vec2 point2 = {point1.x, point1.y - 1.0};
+    vec2 point2 = (vec2){point1.x, point1.y - 1.0};
     current = get_max_cos_index(vertices, n, point2, point1);
     do {
         convex_vertices[*convex_size] = vertices[current];
