@@ -90,7 +90,7 @@ int get_max_cos_index(vec2* vertices, int vert_amount, vec2 point1, vec2 point2)
                 if (get_norm(diff2) > distance(point2, vertices[max_index])) {
                     max_index = i;
                 }
-            } else if (new_cos > max_cos) {
+            } else if (new_cos > max_cos + EPSILON) {
                 max_cos = new_cos;
                 max_index = i;
             }
@@ -120,13 +120,13 @@ void Jarvis_algorithm(int n, vec2* vertices, vec2* convex_vertices, int* convex_
     vec2 point1= convex_vertices[0];
     vec2 point2 = (vec2){point1.x, point1.y - 1.0};
     current = get_max_cos_index(vertices, n, point2, point1);
-    do {
+    while (*convex_size < n && current != -1 && current != min_index) {
         convex_vertices[*convex_size] = vertices[current];
         (*convex_size)++;
         point1 = convex_vertices[*convex_size-2];
         point2 = convex_vertices[*convex_size-1];
         current = get_max_cos_index(vertices, n, point1, point2);
-    } while (*convex_size < n && current != -1 && current != min_index);
+    }
 }
 
 
