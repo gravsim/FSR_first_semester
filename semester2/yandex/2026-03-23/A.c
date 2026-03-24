@@ -3,7 +3,7 @@
 #include <math.h>
 
 
-#define EPSILON 1e-10
+#define EPSILON 1e-7
 
 
 typedef struct vec2 {
@@ -87,7 +87,9 @@ int get_max_cos_index(vec2* vertices, int vert_amount, vec2 point1, vec2 point2)
             diff2 = subtract(vertices[i], point2);
             new_cos = get_cos(diff1, diff2);
             if (double_equal(max_cos, new_cos)) {
-                if (get_norm(diff2) > distance(point2, vertices[max_index])) {
+                if (max_index == -1
+                    ||
+                    get_norm(diff2) > distance(point2, vertices[max_index])) {
                     max_index = i;
                 }
             } else if (new_cos > max_cos + EPSILON) {
@@ -141,22 +143,14 @@ int main(void) {
         scanf("%lf %lf", &vertices[i].x, &vertices[i].y);
     }
     if (n == 0) {
+        free(vertices);
+        free(convex_vertices);
         return 0;
-    } else if (n == 1) {
+    }
+    if (n == 1) {
         printf("%lf %lf\n", vertices[0].x, vertices[0].y);
-        return 0;
-    } else if (n == 2) {
-        if (vertices[0].x > vertices[1].x
-            ||
-            (double_equal(vertices[0].x, vertices[1].x)
-             &&
-             vertices[0].y < vertices[1].y)) {
-            printf("%lf %lf\n", vertices[0].x, vertices[0].y);
-            printf("%lf %lf\n", vertices[1].x, vertices[1].y);
-        } else {
-            printf("%lf %lf\n", vertices[1].x, vertices[1].y);
-            printf("%lf %lf\n", vertices[0].x, vertices[0].y);
-        }
+        free(vertices);
+        free(convex_vertices);
         return 0;
     }
     Jarvis_algorithm(n ,vertices, convex_vertices, &convex_size);
