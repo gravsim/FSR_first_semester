@@ -23,7 +23,11 @@ double get_norm(vec2 vector) {
 
 
 vec2 normalize(vec2 vector) {
-    return (vec2){vector.x / get_norm(vector), vector.y / get_norm(vector)};
+    double norm = get_norm(vector);
+    if (double_equal(norm, 0.)) {
+        return vector;
+    }
+    return (vec2){vector.x / norm, vector.y / norm};
 }
 
 
@@ -47,22 +51,15 @@ double dot(vec2 a, vec2 b) {
 }
 
 
-int int_sign(double a) {
-    if (a < EPSILON) {
-        return -1;
-    }
-    if (a > EPSILON) {
-        return 1;
-    }
-    return 0;
+int double_sign(double a) {
+    return (a > EPSILON) - (a < -EPSILON);
 }
 
 
 int vectors_sign(vec2 point, vec2 start, vec2 end) {
     vec2 edge = subtract(end, start);
     vec2 diff = subtract(point, start);
-    int result = int_sign(cross2(edge, diff));
-    return result;
+    return double_sign(cross2(edge, diff));
 }
 
 
@@ -72,7 +69,9 @@ double get_cos(vec2 vector1, vec2 vector2) {
 
 
 int vec2_equal(vec2 vector1, vec2 vector2) {
-    return double_equal(vector1.x, vector2.x) && double_equal(vector1.y, vector2.y);
+    return double_equal(vector1.x, vector2.x)
+           &&
+           double_equal(vector1.y, vector2.y);
 }
 
 
@@ -105,7 +104,11 @@ void Jarvis_algorithm(int n, vec2* vertices, vec2* convex_vertices, int* convex_
     int i;
     int min_index = 0;
     for (i = 0; i < n; i++) {
-        if (vertices[i].x > vertices[min_index].x || (double_equal(vertices[i].x, vertices[min_index].x) && vertices[i].y < vertices[min_index].y)){
+        if (vertices[i].x > vertices[min_index].x
+            ||
+            (double_equal(vertices[i].x, vertices[min_index].x)
+             &&
+             vertices[i].y < vertices[min_index].y)){
             min_index = i;
         }
     }
@@ -140,16 +143,19 @@ int main(void) {
     if (n == 0) {
         return 0;
     } else if (n == 1) {
-        printf("%lf %lf\n", convex_vertices[0].y, convex_vertices[0].x);
+        printf("%lf %lf\n", vertices[0].x, vertices[0].y);
         return 0;
     } else if (n == 2) {
-        
-        if (convex_vertices[0].x > convex_vertices[1].x || (convex_vertices[0].x == convex_vertices[1].x && convex_vertices[0].y < convex_vertices[1].y)) {
-            printf("%lf %lf\n", convex_vertices[0].x, convex_vertices[0].y);
-            printf("%lf %lf\n", convex_vertices[1].x, convex_vertices[1].y);
+        if (vertices[0].x > vertices[1].x
+            ||
+            (double_equal(vertices[0].x, vertices[1].x)
+             &&
+             vertices[0].y < vertices[1].y)) {
+            printf("%lf %lf\n", vertices[0].x, vertices[0].y);
+            printf("%lf %lf\n", vertices[1].x, vertices[1].y);
         } else {
-            printf("%lf %lf\n", convex_vertices[1].x, convex_vertices[1].y);
-            printf("%lf %lf\n", convex_vertices[0].x, convex_vertices[0].y);
+            printf("%lf %lf\n", vertices[1].x, vertices[1].y);
+            printf("%lf %lf\n", vertices[0].x, vertices[0].y);
         }
         return 0;
     }
