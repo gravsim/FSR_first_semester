@@ -9,9 +9,9 @@ gcc my_file.c -Wall -Werror -Wformat-security -Wignored-qualifiers -Winit-self -
 
 
 
-### Ссылки на сайты
+## Ссылки на сайты
 
-## Яндекс контесты
+### Яндекс контесты
 ### 2 Cеместр
 [2026-03-23 5. Выпуклое множество и внезапно стек](https://contest.yandex.ru/contest/92444/problems/)\
 [2026-03-02 4. Форд-Фалкерсон](https://contest.yandex.ru/contest/91233/problems/)\
