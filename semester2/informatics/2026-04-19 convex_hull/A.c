@@ -75,25 +75,38 @@ long vec2_equal(vec2 vector1, vec2 vector2) {
 }
 
 
+
+int in_hull(vec2 point, vec2 v1, vec2 v2, vec2 v3) {
+    long sign1 = vectors_sign(point, v1, v2);
+    long sign2 = vectors_sign(point, v2, v3);
+    long sign3 = vectors_sign(point, v3, v1);
+    return (sign1 == sign2
+        && sign2 == sign3)
+    ||
+        sign1 == 0
+    ||
+        sign2 == 0
+    ||
+        sign3 == 0;
+}
+
+
 int main(void) {
     long n;
     vec2 point;
     scanf("%ld %lf %lf", &n, &point.x, &point.y);
     vec2* vertices = calloc(n, sizeof(vec2));
-    long answer = 1;
+    long answer = 0;
     long i;
+    long j;
+    long k;
     for (i = 0; i < n; i++) {
         scanf("%lf %lf", &vertices[i].x, &vertices[i].y);
     }
-    long sign0 = vectors_sign(point, vertices[n - 1], vertices[0]);
-    i = 0;
-    int new_sign = vectors_sign(point, vertices[i], vertices[i + 1]);;
-    while (i < n - 1 && (sign0 == new_sign || new_sign == 0)) {
-        i++;
-        new_sign = vectors_sign(point, vertices[i], vertices[i + 1]);
-    }
-    if (new_sign != sign0) {
-        answer = 0;
+    for (i = 0; i < n - 1; i++) {
+        if (in_hull(point, vertices[0], vertices[i+1], vertices[i])) {
+            answer = 1;
+        }
     }
     if (answer) {
         printf("YES");
