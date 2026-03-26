@@ -196,6 +196,11 @@ int Heap_is_full(Heap* heap) {
 }
 
 
+int Heap_is_empty(Heap* heap) {
+    return heap->size == 0;
+}
+
+
 void Heap_expand(Heap* heap) {
     heap->capacity *= 2;
     heap->values = (Heap_node*)realloc(heap->values, heap->capacity * sizeof(Heap_node));
@@ -239,8 +244,8 @@ int Heap_push(Heap* heap, int index, double value) {
 }
 
 
-int Heap_pop_minimum(Heap* heap, int* index, double* value) {
-    *value = heap->values[0].point.coords.x;
+int Heap_pop_minimum(Heap* heap, int* index, Point* value) {
+    *value = heap->values[0].point;
     *index = heap->values[0].index;
     heap->values[0] = heap->values[--heap->size];
     return Heap_sift_down(heap, 0) + 1;
@@ -256,54 +261,24 @@ int Heap_init(Heap** heap) {
 }
 
 
-int get_max_cos_index(vec2* vertices, int vert_amount, vec2 point1, vec2 point2) {
-    int i;
-    double max_cos = -2.;
-    int max_index = -1;
-    vec2 diff1 = subtract(point2, point1);
-    vec2 diff2;
-    double new_cos;
-    for (i = 0; i < vert_amount; i++) {
-        if (!vec2_equal(vertices[i], point2)) {
-            diff2 = subtract(vertices[i], point2);
-            new_cos = get_cos(diff1, diff2);
-            if (double_equal(max_cos, new_cos)) {
-                if (get_norm(diff2) > distance(point2, vertices[max_index])) {
-                    max_index = i;
-                }
-            } else if (new_cos > max_cos) {
-                max_cos = new_cos;
-                max_index = i;
-            }
+
+
+
+void Bentley_Ottmann_algorithm(Heap* heap, BST_node* root_p) {
+    int index;
+    Point point;
+    while (!Heap_is_empty(heap)) {
+        Heap_pop_minimum(heap, &index, &point);
+        if (point.type == 0) {
+            // Beginning
+            BST_push(root_p, point.line_index);
+        } else if (point.type == 1) {
+            // End
+            BST_push(root_p, point.line_index);
+        } else {
+            // Intersection
         }
     }
-    return max_index;
-}
-
-
-void Jarvis_algorithm(int n, vec2* vertices, vec2* convex_vertices, int* convex_size) {
-    int i;
-    int min_index = 0;
-    for (i = 0; i < n; i++) {
-        if (vertices[i].x < vertices[min_index].x || (double_equal(vertices[i].x, vertices[min_index].x) && vertices[i].y < vertices[min_index].y)){
-            min_index = i;
-        }
-    }
-    int current;
-    *convex_size = 0;
-    convex_vertices[*convex_size] = vertices[min_index];
-    (*convex_size)++;
-
-    vec2 point1= convex_vertices[0];
-    vec2 point2 = (vec2){point1.x, point1.y - 1.0};
-    current = get_max_cos_index(vertices, n, point2, point1);
-    do {
-        convex_vertices[*convex_size] = vertices[current];
-        (*convex_size)++;
-        point1 = convex_vertices[*convex_size-2];
-        point2 = convex_vertices[*convex_size-1];
-        current = get_max_cos_index(vertices, n, point1, point2);
-    } while (current != -1 && current != min_index);
 }
 
 
@@ -322,20 +297,12 @@ int main(void) {
     for (i = 0; i < n; i++) {
         scanf("%lf %lf", &vertices[i].x, &vertices[i].y);
     }
-    Jarvis_algorithm(n ,vertices, convex_vertices, &convex_size);
+    Bentley_Ottmann_algorithm(heap, root);
     int next;
     vec2 edge;
     vec2 vector;
     double t;
-    for (i = 0; i < convex_size; i++) {
-        next = (i + 1) % convex_size;
-        edge = subtract(convex_vertices[next], convex_vertices[i]);
-        vector = subtract(*barycenter, convex_vertices[i]);
-        t = dot(edge, vector) / dot(edge, edge);
-        if (t > 0 && t < 1) {
-            answer++;
-        }
-    }
+
     printf("%d", answer);
     free(barycenter);
     free(vertices);
