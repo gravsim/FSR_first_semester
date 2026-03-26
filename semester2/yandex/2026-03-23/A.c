@@ -51,17 +51,6 @@ double dot(vec2 a, vec2 b) {
 }
 
 
-int double_sign(double a) {
-    return (a > EPSILON) - (a < -EPSILON);
-}
-
-
-int vectors_sign(vec2 point, vec2 start, vec2 end) {
-    vec2 edge = subtract(end, start);
-    vec2 diff = subtract(point, start);
-    return double_sign(cross2(edge, diff));
-}
-
 
 double get_cos(vec2 vector1, vec2 vector2) {
     return dot(normalize(vector1), normalize(vector2));

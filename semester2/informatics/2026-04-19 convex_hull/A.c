@@ -3,7 +3,7 @@
 #include <math.h>
 
 
-#define EPSILON 1e-20
+#define EPSILON 1e-60
 
 
 typedef struct vec2 {
@@ -51,12 +51,12 @@ double dot(vec2 a, vec2 b) {
 }
 
 
-int double_sign(double a) {
+long double_sign(double a) {
     return (a > EPSILON) - (a < -EPSILON);
 }
 
 
-int vectors_sign(vec2 point, vec2 start, vec2 end) {
+long vectors_sign(vec2 point, vec2 start, vec2 end) {
     vec2 edge = subtract(end, start);
     vec2 diff = subtract(point, start);
     return double_sign(cross2(edge, diff));
@@ -68,7 +68,7 @@ double get_cos(vec2 vector1, vec2 vector2) {
 }
 
 
-int vec2_equal(vec2 vector1, vec2 vector2) {
+long vec2_equal(vec2 vector1, vec2 vector2) {
     return double_equal(vector1.x, vector2.x)
            &&
            double_equal(vector1.y, vector2.y);
@@ -76,20 +76,24 @@ int vec2_equal(vec2 vector1, vec2 vector2) {
 
 
 int main(void) {
-    int n;
+    long n;
     vec2 point;
-    scanf("%d %lf %lf", &n, &point.x, &point.y);
+    scanf("%ld %lf %lf", &n, &point.x, &point.y);
     vec2* vertices = calloc(n, sizeof(vec2));
-    int answer = 1;
-    int i;
+    long answer = 1;
+    long i;
     for (i = 0; i < n; i++) {
         scanf("%lf %lf", &vertices[i].x, &vertices[i].y);
     }
-    int sign0 = vectors_sign(point, vertices[0], vertices[1]);
-    for (i = 1; i < n - 1; i++) {
-        if (sign0 != vectors_sign(point, vertices[i], vertices[i + 1])) {
-            answer = 0;
-        }
+    long sign0 = vectors_sign(point, vertices[n - 1], vertices[0]);
+    i = 0;
+    int new_sign = vectors_sign(point, vertices[i], vertices[i + 1]);;
+    while (i < n - 1 && (sign0 == new_sign || new_sign == 0)) {
+        i++;
+        new_sign = vectors_sign(point, vertices[i], vertices[i + 1]);
+    }
+    if (new_sign != sign0) {
+        answer = 0;
     }
     if (answer) {
         printf("YES");
