@@ -483,7 +483,6 @@ int Bentley_Ottmann_algorithm(int* intersections_amount, int** intersections, He
         Heap_pop_minimum(*heap, &point);
         sweeping_line_x = point.coords.x;
         if (point.type == 0) {
-            printf("\n2\n");
             // Beginning
             *root_p = BST_push(segments, sweeping_line_x, *root_p, point.line_index);
             low_neighbour = BST_low_neighbour(segments, sweeping_line_x, *root_p, point.line_index);
@@ -555,7 +554,6 @@ int main(void) {
         Heap_push(heap, Ax, Ay, line_index, -1, 0);
         Heap_push(heap, Bx, By, line_index, -1, 1);
     }
-    printf("\n1\n");
     Bentley_Ottmann_algorithm(&intersections_amount, intersections, segments, &heap, &root);
     printf("\nend\n");
     for (i = 0; i < intersections_amount; i++) {
