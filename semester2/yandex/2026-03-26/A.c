@@ -491,18 +491,30 @@ int swap_int_pointers(int** a, int** b) {
 }
 
 
-void quick_sort(int** main_array, int sort_index, int size, int down, int up) {
+
+int pair_smaller(int* a, int* b) {
+    if (a[0] < b[0]) {
+        return 1;
+    }
+    if (a[0] > b[0]) {
+        return 0;
+    }
+    return a[1] < b[1];
+}
+
+
+void quick_sort(int** main_array, int size, int down, int up) {
     if (down >= up) {
         return;
     }
-    int pivot = main_array[(up + down) / 2][sort_index];
+    int* pivot = main_array[(up + down) / 2];
     int left = down;
     int right = up;
     while (left <= right) {
-        while (main_array[left][sort_index] < pivot) {
+        while (pair_smaller(main_array[left], pivot)) {
             left++;
         }
-        while (pivot < main_array[right][sort_index]) {
+        while (pair_smaller(pivot, main_array[right])) {
             right--;
         }
         if (left <= right) {
@@ -511,8 +523,8 @@ void quick_sort(int** main_array, int sort_index, int size, int down, int up) {
             right--;
         }
     }
-    quick_sort(main_array, sort_index, size, down, right);
-    quick_sort(main_array, sort_index, size, left, up);
+    quick_sort(main_array, size, down, right);
+    quick_sort(main_array, size, left, up);
 }
 
 
@@ -672,7 +684,7 @@ int main(void) {
             swap_int(intersections[i], intersections[i] + 1);
         }
     }
-    quick_sort(intersections, 0, intersections_amount, 0, intersections_amount - 1);
+    quick_sort(intersections, intersections_amount, 0, intersections_amount - 1);
     for (i = 0; i < intersections_amount; i++) {
         printf("%d %d\n", intersections[i][0] + 1, intersections[i][1] + 1);
     }
