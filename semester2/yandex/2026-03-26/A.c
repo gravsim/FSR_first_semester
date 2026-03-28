@@ -149,15 +149,15 @@ int BST_low_neighbour(Heap_node** segments, double sweeping_line_x, BST_node* ro
     double biggest = DBL_MIN;
     int biggest_line_index = -1;
     double value = get_y(segments, sweeping_line_x, line_index);
+    double current_y;
     while (root_p) {
-        if (get_y(segments, sweeping_line_x, root_p->line_index) > biggest && get_y(segments, sweeping_line_x, root_p->line_index) < value) {
-            biggest = get_y(segments, sweeping_line_x, root_p->line_index);
+        current_y = get_y(segments, sweeping_line_x, root_p->line_index);
+        if (current_y > biggest && current_y < value) {
+            biggest = current_y;
             biggest_line_index = root_p->line_index;
-        }
-        if (get_y(segments, sweeping_line_x, root_p->line_index) < value) {
-            root_p = root_p->left;
-        } else {
             root_p = root_p->right;
+        } else {
+            root_p = root_p->left;
         }
     }
     return biggest_line_index;
@@ -168,12 +168,12 @@ int BST_high_neighbour(Heap_node** segments, double sweeping_line_x, BST_node* r
     double least = DBL_MAX;
     int lowest_line_index = -1;
     double value = get_y(segments, sweeping_line_x, line_index);
+    double current_y;
     while (root_p) {
-        if (get_y(segments, sweeping_line_x, root_p->line_index) < least && get_y(segments, sweeping_line_x, root_p->line_index) > value) {
-            least = get_y(segments, sweeping_line_x, root_p->line_index);
+        current_y = get_y(segments, sweeping_line_x, root_p->line_index);
+        if (current_y < least && current_y > value) {
+            least = current_y;
             lowest_line_index = root_p->line_index;
-        }
-        if (get_y(segments, sweeping_line_x, root_p->line_index) > value) {
             root_p = root_p->left;
         } else {
             root_p = root_p->right;
@@ -494,7 +494,7 @@ int Bentley_Ottmann_algorithm(int* intersections_amount, int** intersections, He
         sweeping_line_x = point.coords.x;
         if (point.type == BEGINNING) {
 
-            printf("%d\n", point.line_index);
+            //printf("%d\n", point.line_index);
             *root_p = BST_push(segments, sweeping_line_x, *root_p, point.line_index);
             low_neighbour = BST_low_neighbour(segments, sweeping_line_x, *root_p, point.line_index);
             high_neighbour = BST_high_neighbour(segments, sweeping_line_x, *root_p, point.line_index);
@@ -503,7 +503,7 @@ int Bentley_Ottmann_algorithm(int* intersections_amount, int** intersections, He
             check_intersection(intersections_amount, intersections, segments, *heap, sweeping_line_x, point.line_index, high_neighbour);
         } else if (point.type == END) {
 
-            printf("%d\n", point.line_index);
+            //printf("%d\n", point.line_index);
             low_neighbour = BST_low_neighbour(segments, sweeping_line_x, *root_p, point.line_index);
             high_neighbour = BST_high_neighbour(segments, sweeping_line_x, *root_p, point.line_index);
             BST_node** found = BST_search_node(segments, sweeping_line_x, root_p, point.line_index);
@@ -511,7 +511,7 @@ int Bentley_Ottmann_algorithm(int* intersections_amount, int** intersections, He
             check_intersection(intersections_amount, intersections, segments, *heap, sweeping_line_x, low_neighbour, high_neighbour);
         } else if (point.type == CROSS) {
 
-            printf("%d %d\n", point.line_index, point.cross_line);
+            //printf("%d %d\n", point.line_index, point.cross_line);
             a_neighbour_low = BST_low_neighbour(segments, sweeping_line_x, *root_p, point.line_index);
             a_neighbour_high = BST_high_neighbour(segments, sweeping_line_x, *root_p, point.line_index);
 
@@ -568,7 +568,7 @@ int main(void) {
         Heap_push(heap, Bx, By, line_index, -1, END);
     }
     Bentley_Ottmann_algorithm(&intersections_amount, intersections, segments, &heap, &root);
-    printf("\nend\n");
+    //printf("\nend\n");
     for (i = 0; i < intersections_amount; i++) {
         if (intersections[i][0] > intersections[i][1]) {
             swap_int(intersections[i], intersections[i] + 1);
