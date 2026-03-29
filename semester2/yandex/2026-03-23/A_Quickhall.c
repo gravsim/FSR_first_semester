@@ -57,6 +57,19 @@ double get_cos(vec2 vector1, vec2 vector2) {
 }
 
 
+int int_sign(double a) {
+    return (a > EPSILON) - (a < -EPSILON);
+}
+
+
+int vectors_sign(vec2 point, vec2 start, vec2 end) {
+    vec2 edge = subtract(end, start);
+    vec2 diff = subtract(point, start);
+    int result = int_sign(cross2(edge, diff));
+    return result;
+}
+
+
 int vec2_equal(vec2 vector1, vec2 vector2) {
     return double_equal(vector1.x, vector2.x)
            &&
@@ -64,60 +77,38 @@ int vec2_equal(vec2 vector1, vec2 vector2) {
 }
 
 
-int get_max_cos_index(vec2* vertices, int vert_amount, vec2 point1, vec2 point2) {
-    int i;
-    double max_cos = -2.;
-    int max_index = -1;
-    vec2 diff1 = subtract(point2, point1);
-    vec2 diff2;
-    double new_cos;
-    for (i = 0; i < vert_amount; i++) {
-        if (!vec2_equal(vertices[i], point2)) {
-            diff2 = subtract(vertices[i], point2);
-            new_cos = get_cos(diff1, diff2);
-            if (double_equal(max_cos, new_cos)) {
-                if (max_index == -1
-                    ||
-                    get_norm(diff2) > distance(point2, vertices[max_index])) {
-                    max_index = i;
-                }
-            } else if (new_cos > max_cos + EPSILON) {
-                max_cos = new_cos;
-                max_index = i;
-            }
-        }
-    }
-    return max_index;
+
+double line_distance(vec2 start, vec2 end, vec2 point) {
+    double A = start.y - end.y;
+    double B = end.x - start.x;
+    double C = A * start.x + B * start.y;
+    return fabs(A * point.x + B * point.y + C) / sqrt(A * A + B * B);
 }
 
 
-void QuickHall_algorithm(int n, vec2* vertices, vec2* convex_vertices, int* convex_size) {
+
+void QuickHall_algorithm(int n, vec2* vertices, vec2* hull, int* hull_size, vec2 vert1, vec2 vert2, int side) {
+    int index = -1;
+    double max_distance = 0;
     int i;
-    int min_index = 0;
+    double tmp;
     for (i = 0; i < n; i++) {
-        if (vertices[i].x > vertices[min_index].x
-            ||
-            (double_equal(vertices[i].x, vertices[min_index].x)
-             &&
-             vertices[i].y < vertices[min_index].y)){
-            min_index = i;
+        tmp = line_distance(vert1, vert2, vertices[i]);
+        if (vectors_sign(vertices[i], vert1, vert2) == side
+            &&
+            tmp > max_distance) {
+            index = i;
+            max_distance = tmp;
         }
     }
-    int current;
-    *convex_size = 0;
-    convex_vertices[*convex_size] = vertices[min_index];
-    (*convex_size)++;
-
-    vec2 point1= convex_vertices[0];
-    vec2 point2 = (vec2){point1.x, point1.y - 1.0};
-    current = get_max_cos_index(vertices, n, point2, point1);
-    while (*convex_size < n && current != -1 && current != min_index) {
-        convex_vertices[*convex_size] = vertices[current];
-        (*convex_size)++;
-        point1 = convex_vertices[*convex_size-2];
-        point2 = convex_vertices[*convex_size-1];
-        current = get_max_cos_index(vertices, n, point1, point2);
+    if (index == -1) {
+        hull[(*hull_size)++] = vert1;
+        hull[(*hull_size)++] = vert2;
+        return;
     }
+    QuickHall_algorithm(n, vertices, hull, hull_size, vertices[index], vert1, -vectors_sign(vertices[index], vert1, vert2));
+    QuickHall_algorithm(n, vertices, hull, hull_size, vertices[index], vert2, -vectors_sign(vertices[index], vert2, vert1));
+
 }
 
 
@@ -125,28 +116,49 @@ int main(void) {
     int n;
     scanf("%d", &n);
     vec2* vertices = calloc(n, sizeof(vec2));
-    vec2* convex_vertices = calloc(n, sizeof(vec2));
-    int convex_size = 0;
+    vec2* hull = calloc(n, sizeof(vec2));
+    int hull_size = 0;
     int i;
     for (i = 0; i < n; i++) {
         scanf("%lf %lf", &vertices[i].x, &vertices[i].y);
     }
     if (n == 0) {
         free(vertices);
-        free(convex_vertices);
+        free(hull);
         return 0;
     }
     if (n == 1) {
         printf("%lf %lf\n", vertices[0].x, vertices[0].y);
         free(vertices);
-        free(convex_vertices);
+        free(hull);
         return 0;
     }
-    Jarvis_algorithm(n ,vertices, convex_vertices, &convex_size);
-    for (i = 0; i < convex_size; i++) {
-        printf("%lf %lf\n", convex_vertices[i].x, convex_vertices[i].y);
+    int left = 0;
+    for (i = 0; i < n; i++) {
+        if (vertices[i].x < vertices[left].x
+            ||
+            (double_equal(vertices[i].x, vertices[left].x)
+             &&
+             vertices[i].y > vertices[left].y)){
+            left = i;
+             }
+    }
+    int right = 0;
+    for (i = 0; i < n; i++) {
+        if (vertices[i].x > vertices[right].x
+            ||
+            (double_equal(vertices[i].x, vertices[right].x)
+             &&
+             vertices[i].y < vertices[right].y)){
+             right = i;
+             }
+    }
+    QuickHall_algorithm(n ,vertices, hull, &hull_size, vertices[left], vertices[right], 1);
+    QuickHall_algorithm(n ,vertices, hull, &hull_size, vertices[left], vertices[right], -1);
+    for (i = 0; i < hull_size; i++) {
+        printf("%lf %lf\n", hull[i].x, hull[i].y);
     }
     free(vertices);
-    free(convex_vertices);
+    free(hull);
     return 0;
 } 
