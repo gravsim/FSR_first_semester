@@ -40,8 +40,6 @@ int swap_int(int* a, int* b) {
 }
 
 
-
-
 int swap_int_pointers(int** a, int** b) {
     if (!a || !b) {
         return -1;
@@ -102,9 +100,6 @@ int get_intersection(Heap_node** segments, int i, int j, vec2* intersection) {
 
     double denominator = (x2 - x1) * (y4 - y3) - (y2 - y1) * (x4 - x3);
     if (double_equal(denominator, 0)) {
-        //*intersection = segments[i][1].coords;
-        //printf("ASUFNBoisg\n");
-        //perror("ASas");
         return 0;
     }
     double t = ((x4 - x3) * (y1 - y3) - (x1 - x3) * (y4 - y3)) / denominator;
@@ -211,5 +206,13 @@ int main(void) {
     for (i = 0; i < final; i++) {
         printf("%d %d\n", intersections[i][0] + 1, intersections[i][1] + 1);
     }
+    for (i = 0; i < n; i++) {
+        free(segments[i]);
+    }
+    for (i = 0; i < n * n; i++) {
+        free(intersections[i]);
+    }
+    free(segments);
+    free(intersections);
     return 0;
 }

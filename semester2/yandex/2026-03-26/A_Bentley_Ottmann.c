@@ -60,9 +60,6 @@ double get_y(Heap_node** segments, double sweeping_line_x, int line_index) {
 
 
 BST_node* BST_new_node(int line_index) {
-    /*
-        Создаем новый узел.
-    */
     BST_node* new_node = malloc(sizeof(BST_node));
     new_node->line_index = line_index;
     new_node->left = NULL;
@@ -98,9 +95,6 @@ int less_y(Heap_node** segments, double sweeping_line_x, int line1, int line2) {
 
 
 BST_node* BST_push(Heap_node** segments, double sweeping_line_x, BST_node* root_p, int line_index) {
-    /*
-        Добавляем новый лист к дереву.
-    */
     if (!root_p) {
         return BST_new_node(line_index);
     }
@@ -117,12 +111,6 @@ BST_node* BST_push(Heap_node** segments, double sweeping_line_x, BST_node* root_
 
 
 int BST_free_node(BST_node** leaf_pp) {
-    /*
-        Освобождаем память узлов дерева. Если есть потомки,
-        запускаем освобождение для них.
-        Не проверяем leaf_pp == NULL, т.к. это было сделано
-        до старта рекурсии для данного узла.
-    */
     if ((*leaf_pp)->left) {
         BST_free_node(&(*leaf_pp)->left);
     }
@@ -136,10 +124,6 @@ int BST_free_node(BST_node** leaf_pp) {
 
 
 int BST_free_root(BST_node** root_pp) {
-    /*
-        Освобождаем память корня дерева. Если есть
-        потомки, запускаем освобождение для них.
-    */
     if (!root_pp || !*root_pp) {
         return -1;
     }
@@ -191,9 +175,6 @@ int BST_high_neighbour(Heap_node** segments, double sweeping_line_x, BST_node* r
 
 
 BST_node** BST_find_right_min(BST_node** node) {
-    /*
-        Ищем узел с минимальным значением в дереве с корнем node.
-    */
     if (!*node) {
         return NULL;
     }
@@ -205,9 +186,6 @@ BST_node** BST_find_right_min(BST_node** node) {
 
 
 BST_node** BST_search_node(Heap_node** segments, double sweeping_line_x, BST_node** current, int line_index) {
-    /*
-        Ищем узел со значением value в дереве current.
-    */
     double value = get_y(segments, sweeping_line_x, line_index);
     while (*current && (*current)->line_index != line_index) {
         if (get_y(segments, sweeping_line_x, (*current)->line_index) > value) {
@@ -226,24 +204,20 @@ int BST_delete_node(Heap_node** segments, double sweeping_line_x, BST_node** nod
     }
     BST_node* tmp = *node_pp;
     if (!(*node_pp)->right && !(*node_pp)->left) {
-        // Нет детей
         free(tmp);
         *node_pp = NULL;
         return 1;
     }
     if (!(*node_pp)->right) {
-        // Нет только правого ребенка
         *node_pp = (*node_pp)->left;
         free(tmp);
         return 1;
     }
     if (!(*node_pp)->left) {
-        // Нет только левого ребенка
         *node_pp = (*node_pp)->right;
         free(tmp);
         return 1;
     }
-    // Есть оба ребенка
     BST_node** descendant = BST_find_right_min(&(*node_pp)->left);
     (*node_pp)->line_index = (*descendant)->line_index;
     return BST_delete_node(segments, sweeping_line_x, descendant);
@@ -439,9 +413,6 @@ int get_intersection(Heap_node** segments, int i, int j, vec2* intersection) {
 
     double denominator = (x2 - x1) * (y4 - y3) - (y2 - y1) * (x4 - x3);
     if (double_equal(denominator, 0)) {
-        //*intersection = segments[i][1].coords;
-        //printf("ASUFNBoisg\n");
-        //perror("ASas");
         return 0;
     }
     double t = ((x4 - x3) * (y1 - y3) - (x1 - x3) * (y4 - y3)) / denominator;
@@ -463,8 +434,6 @@ int check_intersection(
     , int line2
     ) {
     vec2 intersection_point;
-    //printf("ABOBA\n");
-    //printf("%d %d\n", line1, line2);
     if (line1 != -1
         &&
         line2 != -1
@@ -475,7 +444,6 @@ int check_intersection(
         &&
         intersection_point.x >= sweeping_line_x - EPSILON
         ) {
-        //printf("Aboba2");
         intersections[*intersections_amount][0] = line1;
         intersections[*intersections_amount][1] = line2;
         (*intersections_amount)++;
@@ -505,11 +473,8 @@ int Bentley_Ottmann_algorithm(
     while (!Heap_is_empty(*heap)) {
         Heap_pop_minimum(*heap, &point);
         sweeping_line_x = point.coords.x;
-        //printf("BST: ");
-        //print_tree(*root_p);
-        //printf("\n");
         if (point.type == BEGINNING) {
-            //printf("%d\n", point.line_index);
+
             *root_p = BST_push(segments, sweeping_line_x, *root_p, point.line_index);
             low_neighbour = BST_low_neighbour(segments, sweeping_line_x, *root_p, point.line_index);
             high_neighbour = BST_high_neighbour(segments, sweeping_line_x, *root_p, point.line_index);
@@ -533,7 +498,6 @@ int Bentley_Ottmann_algorithm(
                 , high_neighbour);
         } else if (point.type == END) {
 
-            //printf("%d\n", point.line_index);
             low_neighbour = BST_low_neighbour(segments, sweeping_line_x, *root_p, point.line_index);
             high_neighbour = BST_high_neighbour(segments, sweeping_line_x, *root_p, point.line_index);
             BST_node** found = BST_search_node(segments, sweeping_line_x, root_p, point.line_index);
@@ -549,7 +513,6 @@ int Bentley_Ottmann_algorithm(
                 );
         } else if (point.type == CROSS) {
 
-           //printf("%d %d\n", point.line_index, point.cross_line);
             a_neighbour_low = BST_low_neighbour(segments, sweeping_line_x, *root_p, point.line_index);
             a_neighbour_high = BST_high_neighbour(segments, sweeping_line_x, *root_p, point.line_index);
 
@@ -641,7 +604,6 @@ int main(void) {
         Heap_push(heap, Bx, By, line_index, -1, END);
     }
     Bentley_Ottmann_algorithm(&intersections_amount, intersections, segments, &heap, &root);
-    //printf("\nend\n");
     for (i = 0; i < intersections_amount; i++) {
         if (intersections[i][0] > intersections[i][1]) {
             swap_int(intersections[i], intersections[i] + 1);
@@ -662,9 +624,19 @@ int main(void) {
             final++;
         }
     }
-
     for (i = 0; i < final; i++) {
         printf("%d %d\n", intersections[i][0] + 1, intersections[i][1] + 1);
     }
+    for (i = 0; i < n; i++) {
+        free(segments[i]);
+    }
+    for (i = 0; i < n * n; i++) {
+        free(intersections[i]);
+    }
+    free(segments);
+    free(intersections);
+    BST_free_root(&root);
+    free(heap->values);
+    free(heap);
     return 0;
 }
