@@ -1,4 +1,3 @@
-#include <float.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -111,7 +110,6 @@ int get_max_cos_index(vec2* vertices, int vert_amount, vec2 point1, vec2 point2)
 }
 
 
-
 int Jarvis_algorithm(
     int n,
     vec2* vertices,
@@ -141,7 +139,7 @@ int Jarvis_algorithm(
     convex_vertices[*convex_size] = vertices[min_index];
     (*convex_size)++;
 
-    vec2 point1= convex_vertices[0];
+    vec2 point1 = convex_vertices[0];
     vec2 point2 = (vec2){point1.x, point1.y - 1.0};
     current = get_max_cos_index(vertices, n, point2, point1);
     while (*convex_size < n && current != -1 && current != min_index) {
@@ -157,22 +155,27 @@ int Jarvis_algorithm(
 
 int main(void) {
     long n;
-    vec2 point;
-    scanf("%ld %lf %lf", &n, &point.x, &point.y);
-    vec2* vertices = calloc(n, sizeof(vec2));
-    vec2* convex_vertices = calloc(n, sizeof(vec2));
     int convex_size = 0;
     long i;
-    long intersections_amount = 0;
+    double area = 0;
+    double perimeter = 0;
+    int next;
+    scanf("%ld", &n);
+    vec2* vertices = calloc(n, sizeof(vec2));
+    vec2* convex_vertices = calloc(n, sizeof(vec2));
     for (i = 0; i < n; i++) {
         scanf("%lf %lf", &vertices[i].x, &vertices[i].y);
     }
-    Jarvis_algorithm(n ,vertices, convex_vertices, &convex_size);
-    if (i < n || intersections_amount % 2 == 1) {
-        printf("YES");
-    } else {
-        printf("NO");
+    Jarvis_algorithm(n, vertices, convex_vertices, &convex_size);
+    for (i = 0; i < convex_size; i++) {
+        next = (i + 1) % convex_size;
+        area += convex_vertices[i].x * convex_vertices[next].y
+                -
+                convex_vertices[i].y * convex_vertices[next].x;
+        perimeter += distance(convex_vertices[i], convex_vertices[next]);
     }
+    area = fabs(area) / 2;
+    printf("%lf %lf", perimeter, area);
     free(vertices);
     return 0;
 }
