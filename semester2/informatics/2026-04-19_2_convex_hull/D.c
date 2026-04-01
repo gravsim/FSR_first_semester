@@ -166,24 +166,18 @@ int quick_sort(double* main_array, vec2** side_array, long* fences_lengths, int 
 
 int in_polygon(long vertices_amount, vec2* vertices, vec2 point) {
     int i = 0;
-    int end = 1;
-    vec2 ray_end = (vec2){10000000, point.y + 10};
-    int intersections_amount = 0;
-    while (i < vertices_amount && !point_on_segment(vertices[i], vertices[end], point)) {
-        end = (i + 1) % vertices_amount;
-        if (vectors_sign(vertices[i], point, ray_end)
-            !=
-            vectors_sign(vertices[end], point, ray_end)
-            &&
-            vectors_sign(point, vertices[i], vertices[end])
-            !=
-            vectors_sign(ray_end, vertices[i], vertices[end])
-            ) {
-                intersections_amount++;
-            }
+    int first_sign = vectors_sign(point, vertices[vertices_amount - 1], vertices[0]);
+    int sign = first_sign;
+    int next;
+    while (i < vertices_amount && sign == first_sign) {
+        next = (i + 1) % vertices_amount;
+        sign = vectors_sign(point, vertices[i], vertices[next]);
         i++;
     }
-    return i < vertices_amount || intersections_amount % 2 == 1;
+    if (i < vertices_amount) {
+        return 0;
+    }
+    return 1;
 }
 
 
@@ -193,7 +187,6 @@ int main(void) {
     long i;
     long j;
     double invaded_area = 0;
-    int zone_found;
     scanf("%ld", &fences_amount);
     vec2** fences = calloc(fences_amount, sizeof(vec2*));
     long* fences_lengths = calloc(fences_amount, sizeof(long));
@@ -213,13 +206,27 @@ int main(void) {
     for (i = 0; i < invaders_amount; i++) {
         scanf("%lf %lf", &invaders[i].x, &invaders[i].y);
     }
+    long left;
+    long right;
+    long middle;
+    long invaded;
     for (i = 0; i < invaders_amount; i++) {
-        j = fences_amount - 1;
-        while (j >= 0 && in_polygon(fences_lengths[j], fences[j], invaders[i])) {
-            j--;
-        }
-        if (j < fences_amount - 1) {
-            invaded_zones[j + 1] = 1;
+        left = 0;
+        right = fences_amount - 1;
+        invaded = -1;
+        if (in_polygon(fences_lengths[fences_amount - 1], fences[fences_amount - 1], invaders[i])) {
+            while (left <= right) {
+                middle = (left + right) / 2;
+                if (in_polygon(fences_lengths[middle], fences[middle], invaders[i])) {
+                    invaded = middle;
+                    right = middle - 1;
+                } else {
+                    left = middle + 1;
+                }
+            }
+            if (invaded != -1) {
+                invaded_zones[invaded] = 1;
+            }
         }
     }
     for (i = 0; i < fences_amount; i++) {
