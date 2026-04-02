@@ -5,12 +5,18 @@
 
 
 #define EPSILON 1e-300
+#define AREA_DIFFERENCE 1e-11
 
 
 typedef struct vec2 {
     double x;
     double y;
 } vec2;
+
+
+int double_equal(double a, double b) {
+    return fabs(a - b) <= EPSILON;
+}
 
 
 vec2 subtract(vec2 vector1, vec2 vector2) {
@@ -35,18 +41,18 @@ int vectors_sign(vec2 point, vec2 start, vec2 end) {
 }
 
 
-int get_polygon_area(long fence_length, vec2* fence, double* area) {
-    if (fence == NULL) {
+int get_polygon_area(long polygon_size, vec2* polygon, double* area) {
+    if (polygon == NULL) {
         return -1;
     }
     int i;
     int next;
     *area = 0;
-    for (i = 0; i < fence_length; i++) {
-        next = (i + 1) % fence_length;
-        *area += fence[i].x * fence[next].y
+    for (i = 0; i < polygon_size; i++) {
+        next = (i + 1) % polygon_size;
+        *area += polygon[i].x * polygon[next].y
                 -
-                fence[i].y * fence[next].x;
+                polygon[i].y * polygon[next].x;
     }
     *area = fabs(*area) / 2;
     return 1;
@@ -156,72 +162,50 @@ int in_polygon(long polygon_size, vec2* polygon, vec2 point) {
 }
 
 
-int set_invaded_zones(
-    long invaders_amount,
-    long fences_amount,
-    long* fences_lengths,
-    vec2** fences,
-    vec2* invaders,
-    int* invaded_zones
+double get_left_x(vec2* polygon, int polygon_size) {
+    int i;
+    double left_x = polygon[0].x;
+    for (i = 0 ; i < polygon_size; i++) {
+        if (polygon[i].x < left_x){
+            left_x = i;
+        }
+    }
+    return left_x;
+}
+
+
+double get_right_x(vec2* polygon, int polygon_size) {
+    int i;
+    double right_x = polygon[0].x;
+    for (i = 0 ; i < polygon_size; i++) {
+        if (polygon[i].x > right_x){
+            right_x = i;
+        }
+    }
+    return right_x;
+}
+
+
+int build_slice_sector(
+    vec2* slice_polygon,
+    int slice_polygon_size,
+    vec2* polygon,
+    int polygon_size,
+    double sweeping_line_x
     ) {
-    if (fences_lengths == NULL
-        ||
-        fences == NULL
-        ||
-        invaders == NULL
-        ||
-        invaded_zones == NULL) {
-        return -1;
-    }
+
+    slice_polygon_size = 0;
+    vec2 sweeping_line_start = (vec2){sweeping_line_x, 0};
+    vec2 sweeping_line_end = (vec2){sweeping_line_x, 1};
     int i;
-    long left;
-    long right;
-    long middle;
-    long invaded;
-    for (i = 0; i < invaders_amount; i++) {
-        left = 0;
-        right = fences_amount - 1;
-        invaded = -1;
-        if (in_polygon(fences_lengths[fences_amount - 1],
-        fences[fences_amount - 1],
-        invaders[i])
-        ) {
-            while (left <= right) {
-                middle = (left + right) / 2;
-                if (in_polygon(fences_lengths[middle],
-                fences[middle],
-                invaders[i])
-                ) {
-                    invaded = middle;
-                    right = middle - 1;
-                } else {
-                    left = middle + 1;
-                }
-            }
-            if (invaded != -1) {
-                invaded_zones[invaded] = 1;
-            }
+    for (i = 0; i < polygon_size; i++) {
+        if (vectors_sign(polygon[i], sweeping_line_start, sweeping_line_end) > 0) {
+            slice_polygon[slice_polygon_size] = polygon[0];
         }
     }
     return 1;
 }
 
-
-int calculate_invaded_area(long fences_amount, int* invaded_zones, double* areas, double* invaded_area) {
-    if (invaded_zones == NULL || areas == NULL || invaded_area == NULL) {
-        return -1;
-    }
-    int i;
-    for (i = 0; i < fences_amount; i++) {
-        if (invaded_zones[i]) {
-            *invaded_area += areas[i];
-            if (i > 0) {
-                *invaded_area -= areas[i - 1];
-            }
-        }
-    }
-    return 1;
-}
 
 
 int main(void) {
@@ -231,14 +215,30 @@ int main(void) {
     long j;
     scanf("%ld %ld", &jury_amount, &polygon_size);
     vec2* polygon = calloc(polygon_size, sizeof(vec2));
-    for (i = 0; i < jury_amount; i++) {
+    scanf("%ld", &polygon_size);
+    for (i = 0; i < polygon_size; i++) {
         scanf("%lf %lf", &polygon[i].x, &polygon[i].y);
     }
+    double total_area;
+    double local_area;
+    get_polygon_area(polygon_size, polygon, &total_area);
 
-    scanf("%ld", &polygon_size);
-    vec2* invaders = calloc(polygon_size, sizeof(vec2));
-    for (i = 0; i < polygon_size; i++) {
-        scanf("%lf %lf", &invaders[i].x, &invaders[i].y);
+    double slice_area = total_area / jury_amount;
+    double sweeping_line_x;
+    double right_x = get_right_x(polygon, polygon_size);
+    double left_x = get_left_x(polygon, polygon_size);
+    vec2* slice_polygon = calloc(polygon_size, sizeof(vec2));
+
+    for (i = 0; i < jury_amount; i++) {
+        while (fabs(local_area - slice_area) > AREA_DIFFERENCE) {
+            sweeping_line_x = (right_x + left_x) / 2;
+            get_polygon_area(polygon_size, slice_polygon, &local_area);
+            if (local_area > slice_area) {
+                left_x = sweeping_line_x;
+            } else {
+                right_x = sweeping_line_x;
+            }
+        }
     }
     free(polygon);
     return 0;
