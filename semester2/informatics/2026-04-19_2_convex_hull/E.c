@@ -92,42 +92,6 @@ int swap_long(long* a, long* b) {
 }
 
 
-int quick_sort(
-    double* main_array,
-    vec2** side_array,
-    long* fences_lengths,
-    int size,
-    int down,
-    int up
-    ) {
-    if (main_array == NULL || side_array == NULL || fences_lengths == NULL) {
-        return -1;
-    }
-    if (down >= up) {
-        return 0;
-    }
-    double pivot = main_array[(up + down) / 2];
-    int left = down;
-    int right = up;
-    while (left <= right) {
-        while (main_array[left] < pivot) {
-            left++;
-        }
-        while (pivot < main_array[right]) {
-            right--;
-        }
-        if (left <= right) {
-            swap_double(main_array + left, main_array + right);
-            swap_long(fences_lengths + left, fences_lengths + right);
-            swap_vec2_pointers(side_array + left, side_array + right);
-            left++;
-            right--;
-        }
-    }
-    quick_sort(main_array, side_array, fences_lengths, size, down, right);
-    quick_sort(main_array, side_array, fences_lengths, size, left, up);
-    return 1;
-}
 
 
 int in_triangle(vec2 v1, vec2 v2, vec2 v3, vec2 point) {
@@ -186,26 +150,125 @@ double get_right_x(vec2* polygon, int polygon_size) {
 }
 
 
-int build_slice_sector(
-    vec2* slice_polygon,
-    int slice_polygon_size,
+int get_intersection(vec2 point1, vec2 point2, vec2* intersection, double sweeping_line_x) {
+    double x1 = point1.x;
+    double x2 = point2.x;
+    double y1 = point1.y;
+    double y2 = point2.y;
+
+    double t = (sweeping_line_x - x1) / (x2 - x1);
+    if (t >= 0 && t <= 1) {
+        *intersection = (vec2){x1 + t * (x2 - x1), y1 + t * (y2 - y1)};
+        return 1;
+    }
+    return 0;
+}
+
+
+int build_sector(
+    vec2* sector,
+    int* sector_size,
     vec2* polygon,
     int polygon_size,
-    double sweeping_line_x
+    double sweeping_line_x,
+    vec2** cuts,
+    int sector_index
     ) {
 
-    slice_polygon_size = 0;
+    *sector_size = 0;
     vec2 sweeping_line_start = (vec2){sweeping_line_x, 0};
     vec2 sweeping_line_end = (vec2){sweeping_line_x, 1};
     int i;
     for (i = 0; i < polygon_size; i++) {
         if (vectors_sign(polygon[i], sweeping_line_start, sweeping_line_end) > 0) {
-            slice_polygon[slice_polygon_size] = polygon[0];
+            sector[(*sector_size)++] = polygon[0];
+        }
+    }
+    vec2 intersection;
+    int j = 0;
+    for (i = 0; i < polygon_size; i++) {
+        if (get_intersection(polygon[i], polygon[i + 1], &intersection, sweeping_line_x) > 0) {
+            sector[(*sector_size)++] = intersection;
+            cuts[sector_index] = intersection
         }
     }
     return 1;
 }
 
+
+
+int get_right_down(vec2* hull, int hull_size) {
+    int i;
+    int right = 0;
+    for (i = 0 ; i < hull_size; i++) {
+        if (hull[i].x > hull[right].x
+                ||
+                (double_equal(hull[i].x, hull[right].x)
+                 &&
+                 hull[i].y < hull[right].y)){
+            right = i;
+                 }
+    }
+    return right;
+}
+
+
+int vec2_smaller(vec2 a, vec2 b, vec2 base) {
+    vec2 diff1 = subtract(a, base);
+    vec2 diff2 = subtract(b, base);
+    double cross = cross2(diff1, diff2);
+    if (cross > 0) {
+        return 1;
+    }
+    return 0;
+}
+
+
+int swap_vec2(vec2* a, vec2* b) {
+    if (!a || !b) {
+        return -1;
+    }
+    vec2 tmp = *a;
+    *a = *b;
+    *b = tmp;
+    return 1;
+}
+
+
+void quick_sort(vec2* main_array, int size, int down, int up, vec2 base) {
+    if (down >= up) {
+        return;
+    }
+    vec2 pivot = main_array[(up + down) / 2];
+    int left = down;
+    int right = up;
+    while (left <= right) {
+        while (vec2_smaller(main_array[left], pivot, base)) {
+            left++;
+        }
+        while (vec2_smaller(pivot, main_array[right], base)) {
+            right--;
+        }
+        if (left <= right) {
+            swap_vec2(main_array + left, main_array + right);
+            left++;
+            right--;
+        }
+    }
+    quick_sort(main_array, size, down, right, base);
+    quick_sort(main_array, size, left, up, base);
+}
+
+
+int sort_sector(vec2* sector, int sector_size) {
+    if (sector == NULL) {
+        return -1;
+    }
+    int right_down = get_right_down(sector, sector_size);
+    swap_vec2(&sector[0], &sector[right_down]);
+    quick_sort(sector + 1, sector_size - 1, 0, sector_size - 2, sector[0]);
+    return 1;
+}
 
 
 int main(void) {
@@ -227,12 +290,18 @@ int main(void) {
     double sweeping_line_x;
     double right_x = get_right_x(polygon, polygon_size);
     double left_x = get_left_x(polygon, polygon_size);
-    vec2* slice_polygon = calloc(polygon_size, sizeof(vec2));
-
+    vec2* sector = calloc(polygon_size, sizeof(vec2));
+    int sector_size;
+    vec2** cuts = calloc(jury_amount - 1, sizeof(vec2*));
+    for (i = 0; i < jury_amount - 1; i++) {
+        cuts[i] = calloc(2, sizeof(vec2));
+    }
     for (i = 0; i < jury_amount; i++) {
         while (fabs(local_area - slice_area) > AREA_DIFFERENCE) {
             sweeping_line_x = (right_x + left_x) / 2;
-            get_polygon_area(polygon_size, slice_polygon, &local_area);
+            build_sector(sector, &sector_size, polygon, polygon_size, sweeping_line_x, cuts, i);
+            sort_sector(sector, sector_size);
+            get_polygon_area(sector_size, sector, &local_area);
             if (local_area > slice_area) {
                 left_x = sweeping_line_x;
             } else {
