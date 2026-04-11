@@ -41,7 +41,7 @@ int vectors_sign(vec2 point, vec2 start, vec2 end) {
 }
 
 
-int get_polygon_area(long polygon_size, vec2* polygon, double* area) {
+int get_polygon_area(int polygon_size, vec2* polygon, double* area) {
     if (polygon == NULL) {
         return -1;
     }
@@ -104,7 +104,7 @@ int in_triangle(vec2 v1, vec2 v2, vec2 v3, vec2 point) {
 }
 
 
-int in_polygon(long polygon_size, vec2* polygon, vec2 point) {
+int in_polygon(int polygon_size, vec2* polygon, vec2 point) {
     if (vectors_sign(point, polygon[0], polygon[1]) < 0) {
         return 0;
     }
@@ -128,25 +128,25 @@ int in_polygon(long polygon_size, vec2* polygon, vec2 point) {
 
 double get_left_x(vec2* polygon, int polygon_size) {
     int i;
-    double left_x = polygon[0].x;
+    int left = 0;
     for (i = 0 ; i < polygon_size; i++) {
-        if (polygon[i].x < left_x){
-            left_x = i;
+        if (polygon[i].x < polygon[left].x){
+            left = i;
         }
     }
-    return left_x;
+    return polygon[left].x;
 }
 
 
 double get_right_x(vec2* polygon, int polygon_size) {
     int i;
-    double right_x = polygon[0].x;
+    int right = 0;
     for (i = 0 ; i < polygon_size; i++) {
-        if (polygon[i].x > right_x){
-            right_x = i;
+        if (polygon[i].x > polygon[right].x){
+            right = i;
         }
     }
-    return right_x;
+    return polygon[right].x;
 }
 
 
@@ -172,24 +172,27 @@ int build_sector(
     int polygon_size,
     double sweeping_line_x,
     vec2** cuts,
-    int sector_index
+    int sector_index,
+    double left_border
     ) {
 
     *sector_size = 0;
-    vec2 sweeping_line_start = (vec2){sweeping_line_x, 0};
-    vec2 sweeping_line_end = (vec2){sweeping_line_x, 1};
     int i;
     for (i = 0; i < polygon_size; i++) {
-        if (vectors_sign(polygon[i], sweeping_line_start, sweeping_line_end) > 0) {
+        if (polygon[i].x < sweeping_line_x && polygon[i].x >= left_border - EPSILON) {
             sector[(*sector_size)++] = polygon[0];
         }
     }
     vec2 intersection;
     int j = 0;
+    int next;
     for (i = 0; i < polygon_size; i++) {
-        if (get_intersection(polygon[i], polygon[i + 1], &intersection, sweeping_line_x) > 0) {
+        next = (i + 1) % polygon_size;
+        if (get_intersection(polygon[i], polygon[next], &intersection, sweeping_line_x)) {
             sector[(*sector_size)++] = intersection;
-            cuts[sector_index] = intersection
+            printf("Intersection:%lf %lf\n", intersection.x, intersection.y);
+            cuts[sector_index][j] = intersection;
+            j++;
         }
     }
     return 1;
@@ -260,54 +263,74 @@ void quick_sort(vec2* main_array, int size, int down, int up, vec2 base) {
 }
 
 
-int sort_sector(vec2* sector, int sector_size) {
-    if (sector == NULL) {
+int sort_polygon(vec2* polygon, int polygon_size) {
+    if (polygon == NULL) {
         return -1;
     }
-    int right_down = get_right_down(sector, sector_size);
-    swap_vec2(&sector[0], &sector[right_down]);
-    quick_sort(sector + 1, sector_size - 1, 0, sector_size - 2, sector[0]);
+    int right_down = get_right_down(polygon, polygon_size);
+    swap_vec2(polygon, polygon + right_down);
+    quick_sort(polygon + 1, polygon_size - 1, 0, polygon_size - 2, polygon[0]);
     return 1;
 }
 
 
 int main(void) {
-    long jury_amount;
-    long polygon_size;
-    long i;
-    long j;
-    scanf("%ld %ld", &jury_amount, &polygon_size);
+    int jury_amount;
+    int polygon_size;
+    int i;
+    int j;
+    scanf("%d %d", &jury_amount, &polygon_size);
     vec2* polygon = calloc(polygon_size, sizeof(vec2));
-    scanf("%ld", &polygon_size);
     for (i = 0; i < polygon_size; i++) {
         scanf("%lf %lf", &polygon[i].x, &polygon[i].y);
     }
     double total_area;
-    double local_area;
+    double local_area = 0;
+    sort_polygon(polygon, polygon_size);
     get_polygon_area(polygon_size, polygon, &total_area);
-
+    printf("%lf\n", total_area);
     double slice_area = total_area / jury_amount;
+    printf("slice_area: %lf\n", slice_area);
     double sweeping_line_x;
-    double right_x = get_right_x(polygon, polygon_size);
     double left_x = get_left_x(polygon, polygon_size);
+    double right_x = get_right_x(polygon, polygon_size);
+
+    printf("right_x: %lf\n", right_x);
+    printf("left_x: %lf\n", left_x);
     vec2* sector = calloc(polygon_size, sizeof(vec2));
     int sector_size;
     vec2** cuts = calloc(jury_amount - 1, sizeof(vec2*));
     for (i = 0; i < jury_amount - 1; i++) {
         cuts[i] = calloc(2, sizeof(vec2));
     }
+    double left_border = left_x;
     for (i = 0; i < jury_amount; i++) {
         while (fabs(local_area - slice_area) > AREA_DIFFERENCE) {
-            sweeping_line_x = (right_x + left_x) / 2;
-            build_sector(sector, &sector_size, polygon, polygon_size, sweeping_line_x, cuts, i);
-            sort_sector(sector, sector_size);
+            sweeping_line_x = (left_x + right_x) / 2;
+            printf("sweeping_line_x: %lf\n", sweeping_line_x);
+            build_sector(sector,
+                &sector_size,
+                polygon,
+                polygon_size,
+                sweeping_line_x,
+                cuts,
+                i,
+                left_border);
+            printf("%d\n", sector_size);
+            sort_polygon(sector, sector_size);
             get_polygon_area(sector_size, sector, &local_area);
+            printf("%lf\n", local_area);
             if (local_area > slice_area) {
                 left_x = sweeping_line_x;
             } else {
                 right_x = sweeping_line_x;
             }
         }
+        left_border = sweeping_line_x;
+        left_x = sweeping_line_x;
+    }
+    for (i = 0; i < jury_amount - 1; i++) {
+        printf("%.10E %.10E %.10E %.10E\n", cuts[i][0].x, cuts[i][0].y, cuts[i][1].x, cuts[i][1].y);
     }
     free(polygon);
     return 0;
