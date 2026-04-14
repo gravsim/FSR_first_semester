@@ -29,18 +29,6 @@ double cross2(vec2 a, vec2 b) {
 }
 
 
-int double_sign(double a) {
-    return (a > EPSILON) - (a < -EPSILON);
-}
-
-
-int vectors_sign(vec2 point, vec2 start, vec2 end) {
-    vec2 edge = subtract(end, start);
-    vec2 diff = subtract(point, start);
-    return double_sign(cross2(edge, diff));
-}
-
-
 int get_polygon_area(int polygon_size, vec2* polygon, double* area) {
     if (polygon == NULL) {
         return -1;
@@ -56,73 +44,6 @@ int get_polygon_area(int polygon_size, vec2* polygon, double* area) {
     }
     *area = fabs(*area) / 2;
     return 1;
-}
-
-
-int swap_vec2_pointers(vec2** a, vec2** b) {
-    if (a == NULL || b == NULL) {
-        return -1;
-    }
-    vec2* tmp = *a;
-    *a = *b;
-    *b = tmp;
-    return 1;
-}
-
-
-int swap_double(double* a, double* b) {
-    if (a == NULL || b == NULL) {
-        return -1;
-    }
-    double tmp = *a;
-    *a = *b;
-    *b = tmp;
-    return 1;
-}
-
-
-int swap_long(long* a, long* b) {
-    if (a == NULL || b == NULL) {
-        return -1;
-    }
-    long tmp = *a;
-    *a = *b;
-    *b = tmp;
-    return 1;
-}
-
-
-
-
-int in_triangle(vec2 v1, vec2 v2, vec2 v3, vec2 point) {
-    int sign1 = vectors_sign(point, v1, v2);
-    int sign2 = vectors_sign(point, v2, v3);
-    int sign3 = vectors_sign(point, v3, v1);
-    return (sign1 >= 0 && sign2 >= 0 && sign3 >= 0)
-            ||
-            (sign1 <= 0 && sign2 <= 0 && sign3 <= 0);
-}
-
-
-int in_polygon(int polygon_size, vec2* polygon, vec2 point) {
-    if (vectors_sign(point, polygon[0], polygon[1]) < 0) {
-        return 0;
-    }
-    if (vectors_sign(point, polygon[0], polygon[polygon_size - 1]) > 0) {
-        return 0;
-    }
-    int left = 1;
-    int right = polygon_size - 1;
-    int middle;
-    while (right - left > 1) {
-        middle = (right + left) / 2;
-        if (vectors_sign(point, polygon[0], polygon[middle]) >= 0) {
-            left = middle;
-        } else {
-            right = middle;
-        }
-    }
-    return in_triangle(polygon[0], polygon[left], polygon[right], point);
 }
 
 
@@ -155,7 +76,6 @@ int get_intersection(vec2 point1, vec2 point2, vec2* intersection, double sweepi
     double x2 = point2.x;
     double y1 = point1.y;
     double y2 = point2.y;
-
     double t = (sweeping_line_x - x1) / (x2 - x1);
     if (t >= 0 && t <= 1) {
         *intersection = (vec2){x1 + t * (x2 - x1), y1 + t * (y2 - y1)};
@@ -175,12 +95,25 @@ int build_sector(
     int sector_index,
     double left_border
     ) {
-
+    if (sector == NULL
+        ||
+        sector_size == NULL
+        ||
+        polygon == NULL
+        ||
+        cuts == NULL
+        ) {
+        return -1;
+    }
     *sector_size = 0;
     int i;
+    if (sector_index > 0) {
+        sector[(*sector_size)++] = cuts[sector_index - 1][0];
+        sector[(*sector_size)++] = cuts[sector_index - 1][1];
+    }
     for (i = 0; i < polygon_size; i++) {
         if (polygon[i].x < sweeping_line_x && polygon[i].x >= left_border - EPSILON) {
-            sector[(*sector_size)++] = polygon[0];
+            sector[(*sector_size)++] = polygon[i];
         }
     }
     vec2 intersection;
@@ -190,14 +123,12 @@ int build_sector(
         next = (i + 1) % polygon_size;
         if (get_intersection(polygon[i], polygon[next], &intersection, sweeping_line_x)) {
             sector[(*sector_size)++] = intersection;
-            printf("Intersection:%lf %lf\n", intersection.x, intersection.y);
             cuts[sector_index][j] = intersection;
             j++;
         }
     }
     return 1;
 }
-
 
 
 int get_right_down(vec2* hull, int hull_size) {
@@ -209,7 +140,7 @@ int get_right_down(vec2* hull, int hull_size) {
                 (double_equal(hull[i].x, hull[right].x)
                  &&
                  hull[i].y < hull[right].y)){
-            right = i;
+                    right = i;
                  }
     }
     return right;
@@ -278,7 +209,6 @@ int main(void) {
     int jury_amount;
     int polygon_size;
     int i;
-    int j;
     scanf("%d %d", &jury_amount, &polygon_size);
     vec2* polygon = calloc(polygon_size, sizeof(vec2));
     for (i = 0; i < polygon_size; i++) {
@@ -288,15 +218,11 @@ int main(void) {
     double local_area = 0;
     sort_polygon(polygon, polygon_size);
     get_polygon_area(polygon_size, polygon, &total_area);
-    printf("%lf\n", total_area);
     double slice_area = total_area / jury_amount;
-    printf("slice_area: %lf\n", slice_area);
-    double sweeping_line_x;
+    double sweeping_line_x = 0;
     double left_x = get_left_x(polygon, polygon_size);
     double right_x = get_right_x(polygon, polygon_size);
-
-    printf("right_x: %lf\n", right_x);
-    printf("left_x: %lf\n", left_x);
+    double right_x_save = right_x;
     vec2* sector = calloc(polygon_size, sizeof(vec2));
     int sector_size;
     vec2** cuts = calloc(jury_amount - 1, sizeof(vec2*));
@@ -304,10 +230,9 @@ int main(void) {
         cuts[i] = calloc(2, sizeof(vec2));
     }
     double left_border = left_x;
-    for (i = 0; i < jury_amount; i++) {
+    for (i = 0; i < jury_amount - 1; i++) {
         while (fabs(local_area - slice_area) > AREA_DIFFERENCE) {
             sweeping_line_x = (left_x + right_x) / 2;
-            printf("sweeping_line_x: %lf\n", sweeping_line_x);
             build_sector(sector,
                 &sector_size,
                 polygon,
@@ -316,22 +241,27 @@ int main(void) {
                 cuts,
                 i,
                 left_border);
-            printf("%d\n", sector_size);
             sort_polygon(sector, sector_size);
             get_polygon_area(sector_size, sector, &local_area);
-            printf("%lf\n", local_area);
             if (local_area > slice_area) {
-                left_x = sweeping_line_x;
-            } else {
                 right_x = sweeping_line_x;
+            } else {
+                left_x = sweeping_line_x;
             }
         }
         left_border = sweeping_line_x;
         left_x = sweeping_line_x;
+        right_x = right_x_save;
+        local_area = 0;
     }
     for (i = 0; i < jury_amount - 1; i++) {
         printf("%.10E %.10E %.10E %.10E\n", cuts[i][0].x, cuts[i][0].y, cuts[i][1].x, cuts[i][1].y);
     }
     free(polygon);
+    free(sector);
+    for (i = 0; i < jury_amount - 1; i++) {
+        free(cuts[i]);
+    }
+    free(cuts);
     return 0;
 }
