@@ -74,10 +74,7 @@ int less_y(Heap_node** segments, double sweeping_line_x, int line1, int line2) {
             return 1;
         }
     }
-    if (y1 < y2) {
-        return 1;
-    }
-    return 0;
+    return y1 < y2;
 }
 
 
@@ -138,11 +135,8 @@ int BST_low_neighbour(
     int line_index
     ) {
     int biggest_line_index = -1;
-    double current_y;
-    double line_y = get_y(segments, sweeping_line_x, line_index);
     while (root_p) {
-        current_y = get_y(segments, sweeping_line_x, root_p->line_index);
-        if (line_index != root_p->line_index && current_y <= line_y) {
+        if (less_y(segments, sweeping_line_x, line_index, root_p->line_index)) {
             biggest_line_index = root_p->line_index;
             root_p = root_p->right;
         } else {
@@ -160,11 +154,8 @@ int BST_high_neighbour(
     int line_index
     ) {
     int lowest_line_index = -1;
-    double current_y;
-    double line_y = get_y(segments, sweeping_line_x, line_index);
     while (root_p) {
-        current_y = get_y(segments, sweeping_line_x, root_p->line_index);
-        if (line_index != root_p->line_index && current_y >= line_y) {
+        if (less_y(segments, sweeping_line_x, root_p->line_index, line_index)) {
             lowest_line_index = root_p->line_index;
             root_p = root_p->left;
         } else {
@@ -193,12 +184,11 @@ BST_node** BST_search_node(
     BST_node** current,
     int line_index
     ) {
-    double value = get_y(segments, sweeping_line_x, line_index);
     while (*current && (*current)->line_index != line_index) {
-        if (get_y(segments, sweeping_line_x, (*current)->line_index) > value) {
-            current = &(*current)->right;
-        } else {
+        if (less_y(segments, sweeping_line_x, line_index, (*current)->line_index)) {
             current = &(*current)->left;
+        } else {
+            current = &(*current)->right;
         }
     }
     return current;
