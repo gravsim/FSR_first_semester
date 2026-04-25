@@ -3,7 +3,7 @@
 
 
 
-#define EPSILON 1e-9
+#define PRECISION 1e-9
 
 
 struct vector
@@ -31,7 +31,7 @@ void swap(struct vector *a, struct vector *b) {
 
 
 int compare(struct vector *element, struct vector *pivot) {
-    if (element->module2 - pivot->module2 < EPSILON) {
+    if (element->module2 - pivot->module2 < PRECISION) {
         return 1;
     } else {
         return 0;

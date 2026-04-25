@@ -3,7 +3,7 @@
 #include <math.h>
 
 
-#define EPSILON 1e-300
+#define PRECISION 1e-300
 #define AREA_DIFFERENCE 1e-10
 
 
@@ -14,7 +14,7 @@ typedef struct vec2 {
 
 
 int double_equal(double a, double b) {
-    return fabs(a - b) <= EPSILON;
+    return fabs(a - b) <= PRECISION;
 }
 
 
@@ -119,9 +119,9 @@ int get_sector_area(
     *area = 0;
     for (i = 0; i < polygon_size; i++) {
         next = (i + 1) % polygon_size;
-        if (polygon[i].x < sweeping_line_x + EPSILON
+        if (polygon[i].x < sweeping_line_x + PRECISION
             &&
-            polygon[next].x < sweeping_line_x + EPSILON) {
+            polygon[next].x < sweeping_line_x + PRECISION) {
                 add_area(area, polygon[i], polygon[next]);
         }
         if (intersections_amount < 2

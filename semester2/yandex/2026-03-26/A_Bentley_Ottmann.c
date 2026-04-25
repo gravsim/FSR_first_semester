@@ -4,7 +4,7 @@
 #include <math.h>
 
 
-#define EPSILON 1e-300
+#define PRECISION 1e-10
 #define BEGINNING 0
 #define CROSS 1
 #define END 2
@@ -32,7 +32,7 @@ typedef struct Heap_node {
 
 
 int double_equal(double a, double b) {
-    return fabs(a - b) < EPSILON;
+    return fabs(a - b) < PRECISION;
 }
 
 
@@ -275,13 +275,13 @@ void Heap_expand(Heap* heap) {
 
 
 int is_smaller(Heap_node a, Heap_node b) {
-    if (a.coords.x < b.coords.x - EPSILON) {
+    if (a.coords.x < b.coords.x - PRECISION) {
         return 1;
     }
-    if (a.coords.x > b.coords.x + EPSILON) {
+    if (a.coords.x > b.coords.x + PRECISION) {
         return 0;
     }
-    return a.coords.y < b.coords.y;
+    return a.type < b.type;
 }
 
 
@@ -412,7 +412,7 @@ int get_intersection(Heap_node** segments, int i, int j, vec2* intersection) {
 
     double denominator = (x2 - x1) * (y4 - y3) - (y2 - y1) * (x4 - x3);
     if (double_equal(denominator, 0)) {
-        return 1;
+        return 0;
     }
     double t = ((x4 - x3) * (y1 - y3) - (x1 - x3) * (y4 - y3)) / denominator;
     double s = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / denominator;
@@ -425,6 +425,7 @@ int get_intersection(Heap_node** segments, int i, int j, vec2* intersection) {
 
 
 int check_intersection(
+    int** cross_matrix,
     int* intersections_amount,
     int** intersections,
     Heap_node** segments,
@@ -438,12 +439,16 @@ int check_intersection(
         &&
         line2 != -1
         &&
+        !cross_matrix[line1][line2]
+        &&
         line1 != line2
         &&
         get_intersection(segments, line1, line2, &intersection_point)
         &&
-        intersection_point.x > sweeping_line_x + EPSILON
+        intersection_point.x >= sweeping_line_x - PRECISION
         ) {
+        cross_matrix[line1][line2] = 1;
+        cross_matrix[line2][line1] = 1;
         intersections[*intersections_amount][0] = line1;
         intersections[*intersections_amount][1] = line2;
         (*intersections_amount)++;
@@ -461,6 +466,7 @@ int check_intersection(
 
 
 int Bentley_Ottmann_algorithm(
+    int** cross_matrix,
     int* intersections_amount,
     int** intersections,
     Heap_node** segments,
@@ -487,6 +493,7 @@ int Bentley_Ottmann_algorithm(
             high_neighbour = BST_high_neighbour(segments, sweeping_line_x, *root_p, point.line_index);
 
             check_intersection(
+                cross_matrix,
                 intersections_amount,
                 intersections,
                 segments,
@@ -496,6 +503,7 @@ int Bentley_Ottmann_algorithm(
                 low_neighbour
                 );
             check_intersection(
+                cross_matrix,
                 intersections_amount,
                 intersections,
                 segments,
@@ -510,6 +518,7 @@ int Bentley_Ottmann_algorithm(
             BST_node** found = BST_search_node(segments, sweeping_line_x, root_p, point.line_index);
             BST_delete_node(segments, sweeping_line_x, found);
             check_intersection(
+                cross_matrix,
                 intersections_amount,
                 intersections,
                 segments,
@@ -533,6 +542,7 @@ int Bentley_Ottmann_algorithm(
                 point.cross_line
                 );
             check_intersection(
+                cross_matrix,
                 intersections_amount,
                 intersections,
                 segments,
@@ -542,6 +552,7 @@ int Bentley_Ottmann_algorithm(
                 b_neighbour_low
                 );
             check_intersection(
+                cross_matrix,
                 intersections_amount,
                 intersections,
                 segments,
@@ -552,6 +563,7 @@ int Bentley_Ottmann_algorithm(
                 );
 
             check_intersection(
+                cross_matrix,
                 intersections_amount,
                 intersections,
                 segments,
@@ -561,6 +573,7 @@ int Bentley_Ottmann_algorithm(
                 a_neighbour_low
                 );
             check_intersection(
+                cross_matrix,
                 intersections_amount,
                 intersections,
                 segments,
@@ -589,6 +602,10 @@ int main(void) {
     Heap_node** segments = calloc(n, sizeof(Heap_node*));
     int intersections_amount = 0;
     int** intersections = calloc(n * n, sizeof(int*));
+    int** cross_matrix = calloc(n, sizeof(int*));
+    for (i = 0; i < n; i++) {
+        cross_matrix[i] = calloc(n, sizeof(int));
+    }
     for (i = 0; i < n * n; i++) {
         intersections[i] = calloc(2, sizeof(int));
     }
@@ -599,6 +616,10 @@ int main(void) {
     for (i = 0; i < n; i++) {
         scanf("%d %lf %lf %lf %lf", &line_index, &Ax, &Ay, &Bx, &By);
         line_index--;
+        if (double_equal(Ax, Bx)) {
+            Ax -= 200 * PRECISION;
+            Bx += 200 * PRECISION;
+        }
         segments[line_index][0].line_index = line_index;
         segments[line_index][0].coords.x = Ax;
         segments[line_index][0].coords.y = Ay;
@@ -612,7 +633,7 @@ int main(void) {
         Heap_push(heap, Ax, Ay, line_index, -1, BEGINNING);
         Heap_push(heap, Bx, By, line_index, -1, END);
     }
-    Bentley_Ottmann_algorithm(&intersections_amount, intersections, segments, &heap, &root);
+    Bentley_Ottmann_algorithm(cross_matrix, &intersections_amount, intersections, segments, &heap, &root);
     for (i = 0; i < intersections_amount; i++) {
         if (intersections[i][0] > intersections[i][1]) {
             swap_int(intersections[i], intersections[i] + 1);

@@ -3,11 +3,11 @@
 #include <math.h>
 
 
-#define EPSILON 1e-20
+#define PRECISION 1e-20
 
 
 double double_equal(double a, double b) {
-    return fabs(a - b) <= EPSILON;
+    return fabs(a - b) <= PRECISION;
 }
 
 
@@ -20,10 +20,10 @@ int sign(double a) {
     if (double_equal(a, 0.)) {
         return 0;
     }
-    if (a < EPSILON) {
+    if (a < PRECISION) {
         return -1;
     }
-    if (a > EPSILON) {
+    if (a > PRECISION) {
         return 1;
     }
 }

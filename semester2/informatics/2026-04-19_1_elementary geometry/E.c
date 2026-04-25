@@ -3,7 +3,7 @@
 #include <math.h>
 
 
-#define EPSILON 1e-10
+#define PRECISION 1e-10
 
 
 typedef struct vec2 {
@@ -13,7 +13,7 @@ typedef struct vec2 {
 
 
 double double_equal(double a, double b) {
-    return fabs(a - b) <= EPSILON;
+    return fabs(a - b) <= PRECISION;
 }
 
 
@@ -48,10 +48,10 @@ double dot(vec2 a, vec2 b) {
 
 
 int int_sign(double a) {
-    if (a < EPSILON) {
+    if (a < PRECISION) {
         return -1;
     }
-    if (a > EPSILON) {
+    if (a > PRECISION) {
         return 1;
     }
     return 0;

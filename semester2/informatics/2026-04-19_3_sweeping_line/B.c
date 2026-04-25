@@ -109,9 +109,9 @@ int Heap_init(Heap** heap) {
 
 
 int main(void) {
-    int registers_amount;
+    int bus_stops;
     int i;
-    scanf("%d", &registers_amount);
+    scanf("%d", &bus_stops);
     int hours;
     int minutes;
     int seconds;
@@ -119,7 +119,7 @@ int main(void) {
     Heap_init(&heap);
     int open_time;
     int close_time;
-    for (i = 0; i < registers_amount; i++) {
+    for (i = 0; i < bus_stops; i++) {
         scanf("%d %d %d", &hours, &minutes, &seconds);
         open_time = hours * 3600 + minutes * 60 + seconds;
         scanf("%d %d %d", &hours, &minutes, &seconds);
@@ -147,7 +147,7 @@ int main(void) {
         if (event.type == 0) {
             opened++;
         } else {
-            if (opened == registers_amount) {
+            if (opened == bus_stops) {
                 working_time += event.value - old_time;
             }
             opened--;

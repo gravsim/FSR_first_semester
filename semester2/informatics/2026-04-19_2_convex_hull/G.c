@@ -117,10 +117,14 @@ int build_inner_polygon(
 
 
 int main(void) {
-    int radius;
+    int cuts_amount;
     int polygon_size;
     int i;
-    scanf("%d %d", &polygon_size, &radius);
+    scanf("%d", &cuts_amount);
+    vec2* polygon = calloc(polygon_size, sizeof(vec2));
+    for (i = 0; i < polygon_size; i++) {
+        scanf("%lf %lf", &polygon[i].x, &polygon[i].y);
+    }
     vec2* polygon = calloc(polygon_size, sizeof(vec2));
     vec2* inner_polygon = calloc(polygon_size * polygon_size, sizeof(vec2));
     double** lines = calloc(polygon_size, sizeof(double*));

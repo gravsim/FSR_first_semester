@@ -4,7 +4,7 @@
 #include <math.h>
 
 
-#define EPSILON 1e-10
+#define PRECISION 1e-10
 #define BEGINNING 0
 #define CROSS 1
 #define END 2
@@ -25,7 +25,7 @@ typedef struct Heap_node {
 
 
 int double_equal(double a, double b) {
-    return fabs(a - b) < EPSILON;
+    return fabs(a - b) < PRECISION;
 }
 
 
@@ -158,10 +158,6 @@ int main(void) {
     for (i = 0; i < n; i++) {
         scanf("%d %lf %lf %lf %lf", &line_index, &Ax, &Ay, &Bx, &By);
         line_index--;
-        if (double_equal(Ax, Bx)) {
-            Ax -= 20 * EPSILON;
-            Bx += 20 * EPSILON;
-        }
         segments[line_index][0].line_index = line_index;
         segments[line_index][0].coords.x = Ax;
         segments[line_index][0].coords.y = Ay;

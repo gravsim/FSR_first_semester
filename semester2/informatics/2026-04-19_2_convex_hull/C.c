@@ -3,7 +3,7 @@
 #include <math.h>
 
 
-#define EPSILON 1e-300
+#define PRECISION 1e-300
 
 
 typedef struct vec2 {
@@ -13,7 +13,7 @@ typedef struct vec2 {
 
 
 int double_equal(double a, double b) {
-    return fabs(a - b) <= EPSILON;
+    return fabs(a - b) <= PRECISION;
 }
 
 
@@ -78,7 +78,7 @@ int get_max_cos_index(vec2* vertices, int vert_amount, vec2 point1, vec2 point2)
                     get_norm(diff2) > distance(point2, vertices[max_index])) {
                         max_index = i;
                     }
-            } else if (new_cos > max_cos + EPSILON) {
+            } else if (new_cos > max_cos + PRECISION) {
                 max_cos = new_cos;
                 max_index = i;
             }
