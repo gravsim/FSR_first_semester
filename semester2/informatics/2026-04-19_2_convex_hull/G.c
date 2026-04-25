@@ -118,7 +118,6 @@ int Graham_algorithm(
         }
         convex_vertices[(*convex_size)++] = polygon[i];
     }
-
     return 1;
 }
 
@@ -143,7 +142,6 @@ int main(void) {
     }
     vec2 *convex_vertices = calloc(polygon_size, sizeof(vec2));
     int convex_size = 0;
-
     for (i = 0; i < polygon_size; i++) {
         polygon[i].x = fabs(polygon[i].x);
     }
