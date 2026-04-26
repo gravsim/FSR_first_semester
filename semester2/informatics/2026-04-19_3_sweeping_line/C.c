@@ -65,7 +65,7 @@ int main(void) {
     vec2* segments = calloc(segments_amount, sizeof(vec2));
     for (i = 0; i < segments_amount; i++) {
         scanf("%d %d", &a, &b);
-        segments[i] = (vec2){a, b, i + 1};
+        segments[i] = (vec2){a, b, i};
     }
     vec2_quick_sort(segments, segments_amount, 0, segments_amount - 1);
     int* answers = calloc(segments_amount, sizeof(int));
@@ -78,7 +78,7 @@ int main(void) {
         }
         if (top > 0) {
             top_element = stack[top - 1];
-            answers[segments[i].index] = top_element.index;
+            answers[segments[i].index] = top_element.index + 1;
         }
         stack[top++] = segments[i];
     }
