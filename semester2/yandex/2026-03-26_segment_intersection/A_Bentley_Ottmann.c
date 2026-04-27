@@ -486,102 +486,104 @@ int Bentley_Ottmann_algorithm(
     while (!Heap_is_empty(*heap)) {
         Heap_pop_minimum(*heap, &point);
         sweeping_line_x = point.coords.x;
-        if (point.type == BEGINNING) {
+        switch (point.type) {
+            case BEGINNING:
+                *root_p = BST_push(segments, sweeping_line_x, *root_p, point.line_index);
+                low_neighbour = BST_low_neighbour(segments, sweeping_line_x, *root_p, point.line_index);
+                high_neighbour = BST_high_neighbour(segments, sweeping_line_x, *root_p, point.line_index);
+                check_intersection(
+                    cross_matrix,
+                    intersections_amount,
+                    intersections,
+                    segments,
+                    *heap,
+                    sweeping_line_x,
+                    point.line_index,
+                    low_neighbour
+                    );
+                check_intersection(
+                    cross_matrix,
+                    intersections_amount,
+                    intersections,
+                    segments,
+                    *heap,
+                    sweeping_line_x,
+                    point.line_index,
+                    high_neighbour);
+                break;
+            case END:
+                low_neighbour = BST_low_neighbour(segments, sweeping_line_x, *root_p, point.line_index);
+                high_neighbour = BST_high_neighbour(segments, sweeping_line_x, *root_p, point.line_index);
+                BST_node** found = BST_search_node(segments, sweeping_line_x, root_p, point.line_index);
+                BST_delete_node(segments, sweeping_line_x, found);
+                check_intersection(
+                    cross_matrix,
+                    intersections_amount,
+                    intersections,
+                    segments,
+                    *heap,
+                    sweeping_line_x,
+                    low_neighbour,
+                    high_neighbour
+                    );
+                break;
+            case CROSS:
+                a_neighbour_low = BST_low_neighbour(segments, sweeping_line_x, *root_p, point.line_index);
+                a_neighbour_high = BST_high_neighbour(segments, sweeping_line_x, *root_p, point.line_index);
 
-            *root_p = BST_push(segments, sweeping_line_x, *root_p, point.line_index);
-            low_neighbour = BST_low_neighbour(segments, sweeping_line_x, *root_p, point.line_index);
-            high_neighbour = BST_high_neighbour(segments, sweeping_line_x, *root_p, point.line_index);
+                b_neighbour_low = BST_low_neighbour(segments, sweeping_line_x, *root_p, point.cross_line);
+                b_neighbour_high = BST_high_neighbour(segments, sweeping_line_x, *root_p, point.cross_line);
+                BST_swap_nodes(
+                    segments,
+                    sweeping_line_x,
+                    root_p,
+                    point.line_index,
+                    point.cross_line
+                    );
+                check_intersection(
+                    cross_matrix,
+                    intersections_amount,
+                    intersections,
+                    segments,
+                    *heap,
+                    sweeping_line_x,
+                    point.line_index,
+                    b_neighbour_low
+                    );
+                check_intersection(
+                    cross_matrix,
+                    intersections_amount,
+                    intersections,
+                    segments,
+                    *heap,
+                    sweeping_line_x,
+                    point.line_index,
+                    b_neighbour_high
+                    );
 
-            check_intersection(
-                cross_matrix,
-                intersections_amount,
-                intersections,
-                segments,
-                *heap,
-                sweeping_line_x,
-                point.line_index,
-                low_neighbour
-                );
-            check_intersection(
-                cross_matrix,
-                intersections_amount,
-                intersections,
-                segments,
-                *heap,
-                sweeping_line_x,
-                point.line_index,
-                high_neighbour);
-        } else if (point.type == END) {
-
-            low_neighbour = BST_low_neighbour(segments, sweeping_line_x, *root_p, point.line_index);
-            high_neighbour = BST_high_neighbour(segments, sweeping_line_x, *root_p, point.line_index);
-            BST_node** found = BST_search_node(segments, sweeping_line_x, root_p, point.line_index);
-            BST_delete_node(segments, sweeping_line_x, found);
-            check_intersection(
-                cross_matrix,
-                intersections_amount,
-                intersections,
-                segments,
-                *heap,
-                sweeping_line_x,
-                low_neighbour,
-                high_neighbour
-                );
-        } else if (point.type == CROSS) {
-
-            a_neighbour_low = BST_low_neighbour(segments, sweeping_line_x, *root_p, point.line_index);
-            a_neighbour_high = BST_high_neighbour(segments, sweeping_line_x, *root_p, point.line_index);
-
-            b_neighbour_low = BST_low_neighbour(segments, sweeping_line_x, *root_p, point.cross_line);
-            b_neighbour_high = BST_high_neighbour(segments, sweeping_line_x, *root_p, point.cross_line);
-            BST_swap_nodes(
-                segments,
-                sweeping_line_x,
-                root_p,
-                point.line_index,
-                point.cross_line
-                );
-            check_intersection(
-                cross_matrix,
-                intersections_amount,
-                intersections,
-                segments,
-                *heap,
-                sweeping_line_x,
-                point.line_index,
-                b_neighbour_low
-                );
-            check_intersection(
-                cross_matrix,
-                intersections_amount,
-                intersections,
-                segments,
-                *heap,
-                sweeping_line_x,
-                point.line_index,
-                b_neighbour_high
-                );
-
-            check_intersection(
-                cross_matrix,
-                intersections_amount,
-                intersections,
-                segments,
-                *heap,
-                sweeping_line_x,
-                point.cross_line,
-                a_neighbour_low
-                );
-            check_intersection(
-                cross_matrix,
-                intersections_amount,
-                intersections,
-                segments,
-                *heap,
-                sweeping_line_x,
-                point.cross_line,
-                a_neighbour_high
-                );
+                check_intersection(
+                    cross_matrix,
+                    intersections_amount,
+                    intersections,
+                    segments,
+                    *heap,
+                    sweeping_line_x,
+                    point.cross_line,
+                    a_neighbour_low
+                    );
+                check_intersection(
+                    cross_matrix,
+                    intersections_amount,
+                    intersections,
+                    segments,
+                    *heap,
+                    sweeping_line_x,
+                    point.cross_line,
+                    a_neighbour_high
+                    );
+                break;
+            default:
+                return 0;
         }
     }
     return 1;
