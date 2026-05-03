@@ -6,8 +6,7 @@
 
 #define PRECISION 1e-10
 #define BEGINNING 0
-#define CROSS 1
-#define END 2
+#define END 1
 
 
 typedef struct BST_node {
@@ -24,9 +23,9 @@ typedef struct vec2 {
 
 
 typedef struct Heap_node {
-    vec2 start;
-    vec2 end;
+    vec2 position;
     int index;
+    int type;
 } Heap_node;
 
 
@@ -46,8 +45,8 @@ int swap_int(int* a, int* b) {
 }
 
 
-double get_y(Heap_node* rectangles, int line_index) {
-    return rectangles[line_index].start.y;
+double get_y(vec2* beginnings, int line_index) {
+    return beginnings[line_index].y;
 }
 
 
@@ -60,9 +59,12 @@ BST_node* BST_new_node(int line_index) {
 }
 
 
-int less_y(Heap_node* rectangles, int line1, int line2) {
-    double y1 = get_y(rectangles, line1);
-    double y2 = get_y(rectangles, line2);
+int less_y(vec2* beginnings, int line1, int line2) {
+    if (line1 == line2) {
+        return 0;
+    }
+    double y1 = get_y(beginnings, line1);
+    double y2 = get_y(beginnings, line2);
     if (double_equal(y1, y2)) {
         if (line1 < line2) {
             return 1;
@@ -73,7 +75,7 @@ int less_y(Heap_node* rectangles, int line1, int line2) {
 
 
 BST_node* BST_push(
-    Heap_node* rectangles,
+    vec2* beginnings,
     BST_node* root_p,
     int line_index
     ) {
@@ -83,10 +85,10 @@ BST_node* BST_push(
     if (line_index == root_p->line_index) {
         return root_p;
     }
-    if (less_y(rectangles, line_index, root_p->line_index)) {
-        root_p->left = BST_push(rectangles, root_p->left, line_index);
+    if (less_y(beginnings, line_index, root_p->line_index)) {
+        root_p->left = BST_push(beginnings, root_p->left, line_index);
     } else {
-        root_p->right = BST_push(rectangles, root_p->right, line_index);
+        root_p->right = BST_push(beginnings, root_p->right, line_index);
     }
     return root_p;
 }
@@ -122,16 +124,16 @@ int BST_free_root(BST_node** root_pp) {
 
 
 int BST_low_neighbour(
-    Heap_node* rectangles,
+    vec2* beginnings,
     BST_node* root_p,
     int line_index
     ) {
     int biggest_line_index = -1;
     while (root_p) {
-        if (less_y(rectangles, line_index, root_p->line_index)) {
+        if (less_y(beginnings, root_p->line_index, line_index)) {
+            biggest_line_index = root_p->line_index;
             root_p = root_p->right;
         } else {
-            biggest_line_index = root_p->line_index;
             root_p = root_p->left;
         }
     }
@@ -140,13 +142,13 @@ int BST_low_neighbour(
 
 
 int BST_high_neighbour(
-    Heap_node* rectangles,
+    vec2* beginnings,
     BST_node* root_p,
     int line_index
     ) {
     int lowest_line_index = -1;
     while (root_p) {
-        if (less_y(rectangles, line_index, root_p->line_index)) {
+        if (less_y(beginnings, line_index, root_p->line_index)) {
             lowest_line_index = root_p->line_index;
             root_p = root_p->left;
         } else {
@@ -155,7 +157,6 @@ int BST_high_neighbour(
     }
     return lowest_line_index;
 }
-
 
 
 BST_node** BST_find_right_min(BST_node** node) {
@@ -170,12 +171,12 @@ BST_node** BST_find_right_min(BST_node** node) {
 
 
 BST_node** BST_search_node(
-    Heap_node* rectangles,
+    vec2* beginnings,
     BST_node** current,
     int line_index
     ) {
     while (*current && (*current)->line_index != line_index) {
-        if (less_y(rectangles, line_index, (*current)->line_index)) {
+        if (less_y(beginnings, line_index, (*current)->line_index)) {
             current = &(*current)->left;
         } else {
             current = &(*current)->right;
@@ -211,27 +212,6 @@ int BST_delete_node(BST_node** node_pp) {
 }
 
 
-
-int BST_swap_nodes(
-    Heap_node* rectangles,
-    BST_node** root_p,
-    int index1,
-    int index2
-    ) {
-    BST_node** node1 = BST_search_node(rectangles, root_p, index1);
-    BST_node** node2 = BST_search_node(rectangles, root_p, index2);
-    swap_int(&(*node1)->line_index, &(*node2)->line_index);
-    return 1;
-}
-
-
-int vec2_equal(vec2 vector1, vec2 vector2) {
-    return double_equal(vector1.x, vector2.x)
-        &&
-        double_equal(vector1.y, vector2.y);
-}
-
-
 typedef struct Heap {
     int size;
     int capacity;
@@ -264,17 +244,20 @@ void Heap_expand(Heap* heap) {
 
 
 int is_smaller(Heap_node a, Heap_node b) {
-    if (a.start.x < b.start.x - PRECISION) {
+    if (a.position.x < b.position.x - PRECISION) {
         return 1;
     }
-    if (a.start.x > b.start.x + PRECISION) {
+    if (a.position.x > b.position.x + PRECISION) {
         return 0;
     }
-    if (a.start.y < b.start.y - PRECISION) {
+    if (a.position.y < b.position.y - PRECISION) {
         return 1;
     }
-    if (a.start.y > b.start.y + PRECISION) {
+    if (a.position.y > b.position.y + PRECISION) {
         return 0;
+    }
+    if (a.type != b.type) {
+        return a.type < b.type;
     }
     return a.index < b.index;
 }
@@ -300,13 +283,13 @@ int Heap_sift_down(Heap* heap, int index) {
         &&
         is_smaller(heap->values[2 * index + 1], heap->values[next])
         ) {
-        next = 2 * index + 1;
+            next = 2 * index + 1;
     }
     if (2 * index + 2 < heap->size
         &&
         is_smaller(heap->values[2 * index + 2], heap->values[next])
         ) {
-        next = 2 * index + 2;
+            next = 2 * index + 2;
     }
     if (next != index) {
         Heap_swap_nodes(&heap->values[index], &heap->values[next]);
@@ -316,15 +299,14 @@ int Heap_sift_down(Heap* heap, int index) {
 }
 
 
-int Heap_push(Heap* heap, double Ax, double Ay, double Bx, double By, int index) {
+int Heap_push(Heap* heap, double x, double y, int index, int type) {
     if (Heap_is_full(heap)) {
         Heap_expand(heap);
     }
-    heap->values[heap->size].start.x = Ax;
-    heap->values[heap->size].start.y = Ay;
-    heap->values[heap->size].end.x = Bx;
-    heap->values[heap->size].end.y = By;
+    heap->values[heap->size].position.x = x;
+    heap->values[heap->size].position.y = y;
     heap->values[heap->size].index = index;
+    heap->values[heap->size].type = type;
     Heap_sift_up(heap, heap->size);
     heap->size++;
     return 0;
@@ -348,10 +330,10 @@ int Heap_init(Heap** heap) {
 
 
 
-int get_area(
-    int** cross_matrix,
+int add_area(
     double* area,
-    Heap_node* rectangles,
+    vec2* beginnings,
+    vec2* ends,
     int index1,
     int index2
     ) {
@@ -361,38 +343,47 @@ int get_area(
     int down;
     int right;
     int left;
+    double Ax1 = beginnings[index1].x;
+    double Bx1 = ends[index1].x;
+
+    double Ax2 = beginnings[index2].x;
+    double Bx2 = ends[index2].x;
     if (index1 != -1
         &&
         index2 != -1
         &&
         index1 != index2
+        &&
+        fmax(Ax1, Ax2) < fmin(Bx1, Bx2)
         ) {
-        if (rectangles[index1].start.y > rectangles[index2].start.y) {
+        if (beginnings[index1].y > beginnings[index2].y) {
             up = index1;
             down = index2;
         } else {
             up = index2;
             down = index1;
         }
-        if (rectangles[index1].start.x > rectangles[index2].start.x) {
+        if (beginnings[index1].x > beginnings[index2].x) {
             right = index1;
             left = index2;
         } else {
             right = index2;
             left = index1;
         }
-        height = rectangles[up].start.y - rectangles[down].end.y;
-        width = rectangles[right].start.x - rectangles[left].end.x;
-        *area += height * width;
+        height = beginnings[up].y - ends[down].y;
+        width = beginnings[right].x - ends[left].x;
+        if (height > 0 && width > 0) {
+            *area += height * width;
+        }
     }
     return 0;
 }
 
 
 int algorithm(
-    int** cross_matrix,
      double* area,
-     Heap_node* rectangles,
+     vec2* beginnings,
+     vec2* ends,
      Heap** heap,
      BST_node** root_p
     ) {
@@ -402,22 +393,40 @@ int algorithm(
     BST_node** found;
     while (!Heap_is_empty(*heap)) {
         Heap_pop_minimum(*heap, &rectangle);
-        *root_p = BST_push(rectangles, *root_p, rectangle.index);
-        low_neighbour = BST_low_neighbour(rectangles, *root_p, rectangle.index);
-        high_neighbour = BST_high_neighbour(rectangles, *root_p, rectangle.index);
-        get_area(cross_matrix,
-            area,
-            rectangles,
-            rectangle.index,
-            low_neighbour);
-        get_area(cross_matrix,
-            area,
-            rectangles,
-            rectangle.index,
-            high_neighbour);
-        found = BST_search_node(rectangles, root_p, rectangle.index);
-        if (found && *found) {
-            BST_delete_node(found);
+        switch (rectangle.type) {
+            case BEGINNING:
+                *root_p = BST_push(beginnings, *root_p, rectangle.index);
+                low_neighbour = BST_low_neighbour(beginnings, *root_p, rectangle.index);
+                high_neighbour = BST_high_neighbour(beginnings, *root_p, rectangle.index);
+                add_area(
+                    area,
+                    beginnings,
+                    ends,
+                    rectangle.index,
+                    low_neighbour);
+                add_area(
+                    area,
+                    beginnings,
+                    ends,
+                    rectangle.index,
+                    high_neighbour);
+                break;
+            case END:
+                low_neighbour = BST_low_neighbour(beginnings, *root_p, rectangle.index);
+                high_neighbour = BST_high_neighbour(beginnings, *root_p, rectangle.index);
+                add_area(
+                    area,
+                    beginnings,
+                    ends,
+                    low_neighbour,
+                    high_neighbour);
+                found = BST_search_node(beginnings, root_p, rectangle.index);
+                if (found && *found) {
+                    BST_delete_node(found);
+                }
+                break;
+            default:
+                break;
         }
     }
     return 1;
@@ -432,35 +441,31 @@ int main(void) {
     double Ay;
     double Bx;
     double By;
-    int i;
     BST_node* root = NULL;
     Heap* heap;
     double area = 0;
-    Heap_node* rectangles = calloc(rectangles_amount, sizeof(Heap_node));
-    int** cross_matrix = calloc(rectangles_amount, sizeof(int*));
-    for (i = 0; i < rectangles_amount; i++) {
-        cross_matrix[i] = calloc(rectangles_amount, sizeof(int));
-    }
+    vec2* beginnings = calloc(rectangles_amount, sizeof(vec2));
+    vec2* ends = calloc(rectangles_amount, sizeof(vec2));
     Heap_init(&heap);
     double height;
     double width;
     for (index = 0; index < rectangles_amount; index++) {
-        scanf("%lf %lf %lf %lf", &Ax, &Ay, &width, &height);
+        scanf("%lf %lf %lf %lf", &Ay, &Ax, &height, &width);
         Bx = Ax + width;
         By = Ay + height;
         area += height * width;
-        rectangles[index].index = index;
-        rectangles[index].start.x = Ax;
-        rectangles[index].start.y = Ay;
+        beginnings[index].x = Ax;
+        beginnings[index].y = Ay;
 
-        rectangles[index].end.x = Bx;
-        rectangles[index].end.y = By;
-
-        Heap_push(heap, Ax, Ay, Bx, By, index);
+        ends[index].x = Bx;
+        ends[index].y = By;
+        Heap_push(heap, Ax, Ay, index, BEGINNING);
+        Heap_push(heap, Bx, By, index, END);
     }
-    algorithm(cross_matrix, &area, rectangles, &heap, &root);
-    printf("%lf\n", area);
-    free(rectangles);
+    algorithm(&area, beginnings, ends, &heap, &root);
+    printf("%lf\n", area * 0.0001);
+    free(beginnings);
+    free(ends);
     BST_free_root(&root);
     free(heap->values);
     free(heap);
