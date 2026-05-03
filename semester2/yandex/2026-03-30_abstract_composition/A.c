@@ -332,6 +332,7 @@ int Heap_init(Heap** heap) {
 
 int add_area(
     double* area,
+    int** cross_matrix,
     vec2* beginnings,
     vec2* ends,
     int index1,
@@ -339,40 +340,29 @@ int add_area(
     ) {
     double height;
     double width;
-    int up;
-    int down;
-    int right;
-    int left;
     double Ax1 = beginnings[index1].x;
     double Bx1 = ends[index1].x;
 
     double Ax2 = beginnings[index2].x;
     double Bx2 = ends[index2].x;
+    width = fmin(Bx1, Bx2) - fmax(Ax1, Ax2);
     if (index1 != -1
         &&
         index2 != -1
         &&
         index1 != index2
         &&
-        fmax(Ax1, Ax2) < fmin(Bx1, Bx2)
+        width > 0
+        && !cross_matrix[index1][index2]
         ) {
         if (beginnings[index1].y > beginnings[index2].y) {
-            up = index1;
-            down = index2;
+            height = beginnings[index1].y - ends[index2].y;
         } else {
-            up = index2;
-            down = index1;
+            height = beginnings[index2].y - ends[index1].y;
         }
-        if (beginnings[index1].x > beginnings[index2].x) {
-            right = index1;
-            left = index2;
-        } else {
-            right = index2;
-            left = index1;
-        }
-        height = beginnings[up].y - ends[down].y;
-        width = beginnings[right].x - ends[left].x;
-        if (height > 0 && width > 0) {
+        if (height > 0) {
+            cross_matrix[index1][index2] = 1;
+            cross_matrix[index2][index1] = 1;
             *area += height * width;
         }
     }
@@ -382,6 +372,7 @@ int add_area(
 
 int algorithm(
      double* area,
+     int** cross_matrix,
      vec2* beginnings,
      vec2* ends,
      Heap** heap,
@@ -396,29 +387,23 @@ int algorithm(
         switch (rectangle.type) {
             case BEGINNING:
                 *root_p = BST_push(beginnings, *root_p, rectangle.index);
-                low_neighbour = BST_low_neighbour(beginnings, *root_p, rectangle.index);
-                high_neighbour = BST_high_neighbour(beginnings, *root_p, rectangle.index);
-                add_area(
-                    area,
-                    beginnings,
-                    ends,
-                    rectangle.index,
-                    low_neighbour);
-                add_area(
-                    area,
-                    beginnings,
-                    ends,
-                    rectangle.index,
-                    high_neighbour);
                 break;
             case END:
                 low_neighbour = BST_low_neighbour(beginnings, *root_p, rectangle.index);
                 high_neighbour = BST_high_neighbour(beginnings, *root_p, rectangle.index);
                 add_area(
                     area,
+                    cross_matrix,
                     beginnings,
                     ends,
-                    low_neighbour,
+                    rectangle.index,
+                    low_neighbour);
+                add_area(
+                    area,
+                    cross_matrix,
+                    beginnings,
+                    ends,
+                    rectangle.index,
                     high_neighbour);
                 found = BST_search_node(beginnings, root_p, rectangle.index);
                 if (found && *found) {
@@ -437,6 +422,7 @@ int main(void) {
     int rectangles_amount;
     scanf("%d", &rectangles_amount);
     int index;
+    int i;
     double Ax;
     double Ay;
     double Bx;
@@ -446,6 +432,10 @@ int main(void) {
     double area = 0;
     vec2* beginnings = calloc(rectangles_amount, sizeof(vec2));
     vec2* ends = calloc(rectangles_amount, sizeof(vec2));
+    int** cross_matrix = calloc(rectangles_amount, sizeof(int*));
+    for (i = 0; i < rectangles_amount; i++) {
+        cross_matrix[i] = calloc(rectangles_amount, sizeof(int));
+    }
     Heap_init(&heap);
     double height;
     double width;
@@ -462,7 +452,7 @@ int main(void) {
         Heap_push(heap, Ax, Ay, index, BEGINNING);
         Heap_push(heap, Bx, By, index, END);
     }
-    algorithm(&area, beginnings, ends, &heap, &root);
+    algorithm(&area, cross_matrix, beginnings, ends, &heap, &root);
     printf("%lf\n", area * 0.0001);
     free(beginnings);
     free(ends);
