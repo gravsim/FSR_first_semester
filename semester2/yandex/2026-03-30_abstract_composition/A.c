@@ -45,8 +45,8 @@ int swap_int(int* a, int* b) {
 }
 
 
-double get_y(vec2* beginnings, int line_index) {
-    return beginnings[line_index].y;
+double get_x(vec2* beginnings, int line_index) {
+    return beginnings[line_index].x;
 }
 
 
@@ -63,9 +63,9 @@ int less_y(vec2* beginnings, int line1, int line2) {
     if (line1 == line2) {
         return 0;
     }
-    double y1 = get_y(beginnings, line1);
-    double y2 = get_y(beginnings, line2);
-    return y1 < y2;
+    double x1 = get_x(beginnings, line1);
+    double x2 = get_x(beginnings, line2);
+    return x1 < x2;
 }
 
 
@@ -239,16 +239,16 @@ void Heap_expand(Heap* heap) {
 
 
 int is_smaller(Heap_node a, Heap_node b) {
-    if (a.position.x < b.position.x - PRECISION) {
+    if (a.position.y < b.position.y - PRECISION) {
         return 1;
     }
-    if (a.position.x > b.position.x + PRECISION) {
+    if (a.position.y > b.position.y + PRECISION) {
         return 0;
     }
-    if (a.position.y > b.position.y - PRECISION) {
+    if (a.position.x > b.position.x - PRECISION) {
         return 1;
     }
-    if (a.position.y < b.position.y + PRECISION) {
+    if (a.position.x < b.position.x + PRECISION) {
         return 0;
     }
     if (a.type != b.type) {
@@ -335,12 +335,12 @@ int add_area(
     ) {
     double height;
     double width;
-    double Ax1 = beginnings[index1].x;
-    double Bx1 = ends[index1].x;
+    double Ay1 = beginnings[index1].y;
+    double By1 = ends[index1].y;
 
-    double Ax2 = beginnings[index2].x;
-    double Bx2 = ends[index2].x;
-    width = fmin(Bx1, Bx2) - fmax(Ax1, Ax2);
+    double Ay2 = beginnings[index2].y;
+    double By2 = ends[index2].y;
+    width = fmin(By1, By2) - fmax(Ay1, Ay2);
     if (index1 != -1
         &&
         index2 != -1
@@ -350,10 +350,10 @@ int add_area(
         width > 0
         && !cross_matrix[index1][index2]
         ) {
-        if (beginnings[index1].y > beginnings[index2].y) {
-            height = beginnings[index1].y - ends[index2].y;
+        if (beginnings[index1].x > beginnings[index2].x) {
+            height = beginnings[index1].x - ends[index2].x;
         } else {
-            height = beginnings[index2].y - ends[index1].y;
+            height = beginnings[index2].x - ends[index1].x;
         }
         if (height > 0) {
             cross_matrix[index1][index2] = 1;
@@ -396,7 +396,6 @@ int algorithm(
                     ends,
                     rectangle.index,
                     low_neighbour);
-
                 add_area(
                     area,
                     cross_matrix,
@@ -422,6 +421,7 @@ int main(void) {
     scanf("%d", &rectangles_amount);
     int index;
     int i;
+    int j;
     double x;
     double y;
     BST_node* root = NULL;
@@ -436,18 +436,48 @@ int main(void) {
     Heap_init(&heap);
     double height;
     double width;
+
     for (index = 0; index < rectangles_amount; index++) {
         scanf("%lf %lf %lf %lf", &x, &y, &width, &height);
         area += height * width;
-        beginnings[index].x = y;
-        beginnings[index].y = x;
+        beginnings[index].x = x;
+        beginnings[index].y = y;
 
-        ends[index].x = y + height;
-        ends[index].y = x + width;
+        ends[index].x = x + width;
+        ends[index].y = y + height;
         Heap_push(heap, beginnings[index].x, beginnings[index].y, index, BEGINNING);
         Heap_push(heap, ends[index].x, ends[index].y, index, END);
     }
     algorithm(&area, cross_matrix, beginnings, ends, &heap, &root);
+    double Ax1;
+    double Bx1;
+    double Ax2;
+    double Bx2;
+
+    double Ay1;
+    double By1;
+    double Ay2;
+    double By2;
+    for (i = 0; i < rectangles_amount; i++) {
+        for (j = i + 1; j < rectangles_amount; j++) {
+            Ax1 = beginnings[i].x;
+            Bx1 = ends[i].x;
+
+            Ax2 = beginnings[j].x;
+            Bx2 = ends[j].x;
+
+            Ay1 = beginnings[i].y;
+            By1 = ends[i].y;
+
+            Ay2 = beginnings[j].y;
+            By2 = ends[j].y;
+            width = fmin(Bx1, Bx2) - fmax(Ax1, Ax2);
+            height = fmin(By1, By2) - fmax(Ay1, Ay2);
+            if (width > 0 && height > 0) {
+                area -= width * height;
+            }
+        }
+    }
     printf("%lf\n", area * 0.0001);
     free(beginnings);
     free(ends);
