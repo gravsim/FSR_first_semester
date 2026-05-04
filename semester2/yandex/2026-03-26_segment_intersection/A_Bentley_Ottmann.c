@@ -414,7 +414,6 @@ int check_intersection(
     int** intersections,
     Heap_node** segments,
     Heap* heap,
-    double sweeping_line_x,
     int line1,
     int line2
     ) {
@@ -487,7 +486,6 @@ int Bentley_Ottmann_algorithm(
                     intersections,
                     segments,
                     *heap,
-                    sweeping_line_x,
                     point.line_index,
                     low
                     );
@@ -496,7 +494,6 @@ int Bentley_Ottmann_algorithm(
                     intersections,
                     segments,
                     *heap,
-                    sweeping_line_x,
                     point.line_index,
                     high);
                 break;
@@ -512,7 +509,6 @@ int Bentley_Ottmann_algorithm(
                     intersections,
                     segments,
                     *heap,
-                    sweeping_line_x,
                     low,
                     high
                     );
@@ -520,20 +516,19 @@ int Bentley_Ottmann_algorithm(
             case CROSS:
                 a = point.line_index;
                 b = point.cross_index;
-
-                node1 = BST_search_node(segments, sweeping_line_x, root_p, a);
+                node1 = BST_search_node(segments, x_before, root_p, a);
                 if (node1 && *node1) {
-                    BST_delete_node(segments, sweeping_line_x, node1);
+                    BST_delete_node(segments, x_before, node1);
                 }
-                node2 = BST_search_node(segments, sweeping_line_x, root_p, b);
+                node2 = BST_search_node(segments, x_before, root_p, b);
                 if (node2 && *node2) {
-                    BST_delete_node(segments, sweeping_line_x, node2);
+                    BST_delete_node(segments, x_before, node2);
                 }
-                a_low  = BST_low_neighbour(segments, sweeping_line_x, *root_p, a);
-                a_high = BST_high_neighbour(segments, sweeping_line_x, *root_p, a);
+                a_low  = BST_low_neighbour(segments, x_before, *root_p, a);
+                a_high = BST_high_neighbour(segments, x_before, *root_p, a);
 
-                b_low  = BST_low_neighbour(segments, sweeping_line_x, *root_p, b);
-                b_high = BST_high_neighbour(segments, sweeping_line_x, *root_p, b);
+                b_low  = BST_low_neighbour(segments, x_before, *root_p, b);
+                b_high = BST_high_neighbour(segments, x_before, *root_p, b);
 
                 *root_p = BST_push(segments, x_after, *root_p, a);
                 *root_p = BST_push(segments, x_after, *root_p, b);
@@ -542,7 +537,6 @@ int Bentley_Ottmann_algorithm(
                     intersections,
                     segments,
                     *heap,
-                    sweeping_line_x,
                     a,
                     a_low
                     );
@@ -551,7 +545,6 @@ int Bentley_Ottmann_algorithm(
                     intersections,
                     segments,
                     *heap,
-                    sweeping_line_x,
                     a,
                     a_high
                     );
@@ -560,7 +553,6 @@ int Bentley_Ottmann_algorithm(
                     intersections,
                     segments,
                     *heap,
-                    sweeping_line_x,
                     b,
                     b_low
                     );
@@ -569,7 +561,6 @@ int Bentley_Ottmann_algorithm(
                     intersections,
                     segments,
                     *heap,
-                    sweeping_line_x,
                     b,
                     b_high
                     );
@@ -599,12 +590,10 @@ int main(void) {
     int** cross_matrix = calloc(segments_amount, sizeof(int*));
     for (i = 0; i < segments_amount; i++) {
         cross_matrix[i] = calloc(segments_amount, sizeof(int));
+        segments[i] = calloc(2, sizeof(Heap_node));
     }
     for (i = 0; i < segments_amount * segments_amount; i++) {
         intersections[i] = calloc(2, sizeof(int));
-    }
-    for (i = 0; i < segments_amount; i++) {
-        segments[i] = calloc(2, sizeof(Heap_node));
     }
     Heap_init(&heap);
     for (i = 0; i < segments_amount; i++) {
@@ -632,13 +621,13 @@ int main(void) {
     quick_sort(intersections, intersections_amount, 0, intersections_amount - 1);
     for (i = 0; i < intersections_amount; i++) {
         printf("%d %d\n", intersections[i][0] + 1, intersections[i][1] + 1);
+        free(intersections[i]);
     }
     for (i = 0; i < segments_amount; i++) {
         free(segments[i]);
+        free(cross_matrix[i]);
     }
-    for (i = 0; i < segments_amount * segments_amount; i++) {
-        free(intersections[i]);
-    }
+    free(cross_matrix);
     free(segments);
     free(intersections);
     BST_free_root(&root);
