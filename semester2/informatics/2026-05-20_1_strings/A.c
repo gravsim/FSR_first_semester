@@ -2,36 +2,43 @@
 #include <stdlib.h>
 
 
-int z_function(char* str, int* answer, int length) {
-    if (str == NULL || answer == NULL) {
+int substring_equal(char* string1, char* string2, int indentation, int len) {
+    if (string1 == NULL || string2 == NULL) {
         return -1;
     }
     int i = 0;
-    int j;
-    for (i = 1; i < length; i++) {
-        j = 0;
-        while (i + j < length && str[j] == str[i + j]) {
-            answer[i]++;
-            j++;
-        }
+    while (i < len && string1[i] == string2[(indentation + i) % len] ) {
+        i++;
     }
-    return 1;
+    if (i == len) {
+        return 1;
+    }
+    return 0;
 }
 
 
 int main(void) {
-    int max_length = 1000;
+    int max_length = 10000;
     int length = 0;
-    char str[max_length];
+
+    char str1[max_length];
+    char str2[max_length];
     int i;
-    while (scanf("%c", str + length) != EOF && str[length] != '\n') {
+    int j;
+    while (scanf("%c", str1 + length) != EOF && str1[length] != '\n') {
         length++;
     }
-    int* answer = calloc(length, sizeof(int));
-    z_function(str, answer, length);
     for (i = 0; i < length; i++) {
-        printf("%d ", answer[i]);
+        scanf("%c", str2 + i);
     }
-    free(answer);
+    i = 0;
+    while (i < length && !substring_equal(str1, str2, i, length)) {
+        i++;
+    }
+    if (i < length) {
+        printf("%d", i);
+    } else {
+        printf("-1");
+    }
     return 0;
 }
