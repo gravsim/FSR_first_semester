@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
 
 
 int substring_equal(char* string1, char* string2, int indentation, int len) {
