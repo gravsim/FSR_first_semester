@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define min(a, b) ((a) < (b)) ? (a) : (b)
-
 
 int smaller(char* a, char* b, int len_a, int len_b) {
     int i = 0;
