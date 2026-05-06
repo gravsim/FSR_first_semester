@@ -3,7 +3,7 @@
 
 
 #define MAX_LENGTH 10000
-#define ALPHABET_SIZE 6300
+#define ALPHABET_SIZE 63
 
 
 struct TrieNode {
@@ -12,11 +12,17 @@ struct TrieNode {
 } typedef TrieNode;
 
 
+
+int get_index(char a) {
+    return a - 'a';
+}
+
+
 TrieNode** Trie_search_node(TrieNode** current, char* word, int length) {
     int i = 0;
-    int index = word[i] - 'a';
-    while (i < length && *current && (*current)->children[index]) {
-        index = word[i] - 'a';
+    int index;
+    while (i < length && *current) {
+        index = get_index(word[i]);
         current = &(*current)->children[index];
         i++;
     }
@@ -28,7 +34,8 @@ TrieNode** Trie_search_node(TrieNode** current, char* word, int length) {
 
 
 int Trie_delete_node(TrieNode** node) {
-    (*node)->end_of_word = 0;
+    if (!node || !*node || !(*node)->end_of_word) {
+        return 0;
     return 1;
 }
 
@@ -43,13 +50,13 @@ TrieNode* Trie_new_node() {
 
 TrieNode* Trie_push(TrieNode* root, char* word, int length) {
     if (!root) {
-        return Trie_new_node();
+        root = Trie_new_node();
     }
     TrieNode* current = root;
     int i;
     int index;
     for (i = 0; i < length; i++) {
-        index = word[i] - 'a';
+        index = get_index(word[i]);
         if (!current->children[index]) {
             current->children[index] = Trie_new_node();
         }
@@ -89,6 +96,19 @@ int Trie_print(TrieNode** node) {
 }
 
 
+
+int read_word(int* length, char* string) {
+    if (length == NULL) {
+        return -1;
+    }
+    *length = 0;
+    while (scanf("%c", string + *length) != EOF && string[*length] != '\n') {
+        length++;
+    }
+    return 1;
+}
+
+
 int main(void) {
     int command;
     TrieNode* root = NULL;
@@ -96,32 +116,21 @@ int main(void) {
     char string[MAX_LENGTH];
     TrieNode** found;
     do {
-        scanf("%d", &command);
+        scanf("%d ", &command);
         switch (command) {
             case 1:
-                length = 0;
-                while (scanf("%c", string + length) != EOF && string[length] != '\n') {
-                    length++;
-                }
+                read_word(&length, string);
+                printf("%s", string);
                 root = Trie_push(root, string, length);
                 printf("1\n");
                 break;
             case 2:
-                length = 0;
-                while (scanf("%c", string + length) != EOF && string[length] != '\n') {
-                    length++;
-                }
-                if (Trie_search_node(&root, string, length)) {
-                    printf("1\n");
-                } else {
-                    printf("0\n");
-                }
+                read_word(&length, string);
+                found = Trie_search_node(&root, string, length);
+                printf("%d\n", (*found)->end_of_word);
                 break;
             case 3:
-                length = 0;
-                while (scanf("%c", string + length) != EOF && string[length] != '\n') {
-                    length++;
-                }
+                read_word(&length, string);
                 found = Trie_search_node(&root, string, length);
                 printf("%d\n", Trie_delete_node(found));
                 break;
