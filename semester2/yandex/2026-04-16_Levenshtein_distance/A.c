@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 
-#define MAX_LENGTH 100001
+#define MAX_LENGTH 1000
 #define min_of_2(a, b) (a) < (b) ? (a) : (b)
 #define min_of_3(a, b, c) min_of_2((a), min_of_2((b), (c)));
 
@@ -40,11 +40,10 @@ int get_Levenshtein_distance(char word1[], char word2[], int length1, int length
 
 
 int main(void) {
-    int max_length = 1000;
     int length1 = 0;
     int length2 = 0;
-    char word1[max_length];
-    char word2[max_length];
+    char word1[MAX_LENGTH];
+    char word2[MAX_LENGTH];
     while (scanf("%c", word1 + length1) != EOF && word1[length1] != '\n') {
         length1++;
     }
