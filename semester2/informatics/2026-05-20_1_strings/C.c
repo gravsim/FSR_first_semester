@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 
-#define MAX_LENGTH 10000
+#define MAX_LENGTH 200
 #define ALPHABET_SIZE 26
 
 
@@ -99,7 +99,7 @@ int print_string(char* string, int length) {
     for (i = 0; i < length; i++) {
         printf("%c", string[i]);
     }
-    printf(" ");
+    printf("\n");
     return 1;
 }
 
@@ -112,14 +112,33 @@ int Trie_print(TrieNode* node, char* sample, int length, int max_prefix, int add
     for (i = 0; i < ALPHABET_SIZE; i++) {
         if (node->children[i]) {
             sample[length] = get_char(i);
-            added = Trie_print(node->children[i], sample, length + 1, max_prefix, added);
             if (node->children[i]->end_of_word && (length < max_prefix || added == 0)) {
                 print_string(sample, length + 1);
                 added++;
             }
+            Trie_print(node->children[i], sample, length + 1, max_prefix, added);
         }
     }
-    return 1;
+    return added;
+}
+
+
+int Trie_count(TrieNode* node, char* sample, int length, int max_prefix, int added, int* total) {
+    if (node == NULL || sample == NULL) {
+        return 0;
+    }
+    int i;
+    for (i = 0; i < ALPHABET_SIZE; i++) {
+        if (node->children[i]) {
+            sample[length] = get_char(i);
+            if (node->children[i]->end_of_word && (length < max_prefix || added == 0)) {
+                (*total)++;
+                added++;
+            }
+            Trie_count(node->children[i], sample, length + 1, max_prefix, added, total);
+        }
+    }
+    return added;
 }
 
 
@@ -138,20 +157,23 @@ int read_word(int* length, char* string) {
 
 
 int main(void) {
-    int amount;
+    long amount;
     int max_prefix;
-    scanf("%d %d", &amount, &max_prefix);
+    scanf("%ld %d", &amount, &max_prefix);
     int i;
     TrieNode* root = NULL;
     int length = 0;
     char string[MAX_LENGTH];
-    TrieNode** found;
     char* sample = calloc(MAX_LENGTH, sizeof(char));
     for (i = 0; i < amount; i++) {
         read_word(&length, string);
         root = Trie_push(root, string, length);
     }
+    int total;
+    Trie_count(root, sample, 0, max_prefix, 0, &total);
+    printf("%d\n", total);
     Trie_print(root, sample, 0, max_prefix, 0);
+    free(sample);
     Trie_free_node(&root);
     return 0;
 }
