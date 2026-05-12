@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 
-#define MAX_LENGTH 200
+#define MAX_LENGTH 100000
 #define ALPHABET_SIZE 26
 
 
@@ -20,30 +20,6 @@ int get_index(char symbol) {
 
 char get_char(int index) {
     return 'a' + index;
-}
-
-
-TrieNode** Trie_search_node(TrieNode** current, char* word, int length) {
-    int i = 0;
-    int index;
-    while (i < length && *current) {
-        index = get_index(word[i]);
-        current = &(*current)->children[index];
-        i++;
-    }
-    if (i < length) {
-        return NULL;
-    }
-    return current;
-}
-
-
-int Trie_delete_node(TrieNode** node) {
-    if (!node || !*node || !(*node)->end_of_word) {
-        return 0;
-    }
-    (*node)->end_of_word = 0;
-    return 1;
 }
 
 
@@ -104,41 +80,63 @@ int print_string(char* string, int length) {
 }
 
 
-int Trie_print(TrieNode* node, char* sample, int length, int max_prefix, int added) {
+int Trie_check(
+    int print,
+    TrieNode* node,
+    char* sample,
+    int depth,
+    int max_prefix,
+    int* total
+    ) {
     if (node == NULL || sample == NULL) {
         return 0;
     }
     int i;
-    for (i = 0; i < ALPHABET_SIZE; i++) {
-        if (node->children[i]) {
-            sample[length] = get_char(i);
-            if (node->children[i]->end_of_word && (length < max_prefix || added == 0)) {
-                print_string(sample, length + 1);
-                added++;
+    if (depth <= max_prefix) {
+        if (node->end_of_word) {
+            (*total)++;
+            if (print) {
+                print_string(sample, depth);
             }
-            Trie_print(node->children[i], sample, length + 1, max_prefix, added);
         }
-    }
-    return added;
-}
-
-
-int Trie_count(TrieNode* node, char* sample, int length, int max_prefix, int added, int* total) {
-    if (node == NULL || sample == NULL) {
+        for (i = 0; i < ALPHABET_SIZE; i++) {
+            if (node->children[i]) {
+                sample[depth] = get_char(i);
+                Trie_check(
+                    print,
+                    node->children[i],
+                    sample,
+                    depth + 1,
+                    max_prefix,
+                    total
+                    );
+            }
+        }
         return 0;
     }
-    int i;
-    for (i = 0; i < ALPHABET_SIZE; i++) {
+    i = 0;
+    int result = 0;
+    while (i < ALPHABET_SIZE && !result) {
         if (node->children[i]) {
-            sample[length] = get_char(i);
-            if (node->children[i]->end_of_word && (length < max_prefix || added == 0)) {
-                (*total)++;
-                added++;
-            }
-            Trie_count(node->children[i], sample, length + 1, max_prefix, added, total);
+            sample[depth] = get_char(i);
+            result = Trie_check(print,
+                node->children[i],
+                sample,
+                depth + 1,
+                max_prefix,
+                total
+                );
         }
+        i++;
     }
-    return added;
+    if (!result && node->end_of_word) {
+        (*total)++;
+        if (print) {
+            print_string(sample, depth);
+        }
+        return 1;
+    }
+    return result;
 }
 
 
@@ -160,19 +158,19 @@ int main(void) {
     long amount;
     int max_prefix;
     scanf("%ld %d", &amount, &max_prefix);
-    int i;
+    long i;
     TrieNode* root = NULL;
     int length = 0;
+    int total = 0;
     char string[MAX_LENGTH];
     char* sample = calloc(MAX_LENGTH, sizeof(char));
     for (i = 0; i < amount; i++) {
         read_word(&length, string);
         root = Trie_push(root, string, length);
     }
-    int total;
-    Trie_count(root, sample, 0, max_prefix, 0, &total);
+    Trie_check(0, root, sample, 0, max_prefix, &total);
     printf("%d\n", total);
-    Trie_print(root, sample, 0, max_prefix, 0);
+    Trie_check(1, root, sample, 0, max_prefix, &total);
     free(sample);
     Trie_free_node(&root);
     return 0;
