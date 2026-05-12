@@ -9,17 +9,17 @@ struct Node
 };
 
 
-int insert(struct Node** head_pp, int value) {
+int insert(struct Node** head, int value) {
     struct Node* new_node = (struct Node*)malloc(sizeof(struct Node));
     if (!new_node) return -2;
     new_node->value = value;
     new_node->next = NULL;
-    if (!*head_pp) {
-        *head_pp = new_node;
+    if (!*head) {
+        *head = new_node;
         return 0;
     }
-    new_node->next = *head_pp;
-    *head_pp = new_node;
+    new_node->next = *head;
+    *head = new_node;
     return 0;
 }
 
