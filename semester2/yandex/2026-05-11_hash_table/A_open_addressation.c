@@ -20,27 +20,6 @@ typedef struct Hash_table {
 } Hash_table;
 
 
-int Table_expand(Hash_table* hash_table) {
-    int old_size = hash_table->max_size;
-    hash_table->max_size *= 2;
-    Node** memory = realloc(hash_table->values, hash_table->max_size * sizeof(Node*));
-    if (!memory) {
-        return 0;
-    }
-    hash_table->values = memory;
-    int i;
-    for (i = old_size - 1; i < hash_table->max_size; i++) {
-        hash_table->values[i] = NULL;
-    }
-    return 1;
-}
-
-
-double fraction(double a) {
-    return a - (int)a;
-}
-
-
 int Hash_function(int key, int i, int table_size) {
     return (key + i + table_size) % table_size;
 }
@@ -75,6 +54,8 @@ int calculate_place(Hash_table* hash_table, int key, int* i, int* index) {
         hash_table->values[*index]
         &&
         hash_table->values[*index]->key != NO
+        &&
+        hash_table->values[*index]->key != DEL
         ) {
         (*i)++;
         *index = Hash_function(key, *i, hash_table->max_size);
@@ -83,7 +64,7 @@ int calculate_place(Hash_table* hash_table, int key, int* i, int* index) {
 }
 
 
-int Table_push(Hash_table* hash_table, int key, double value) {
+int Table_push_expansion(Hash_table* hash_table, int key, double value) {
     if (hash_table == NULL || hash_table->values == NULL) {
         return 3;
     }
@@ -94,12 +75,6 @@ int Table_push(Hash_table* hash_table, int key, double value) {
     int i;
     int index;
     calculate_place(hash_table, key, &i, &index);
-    if (i >= hash_table->max_size) {
-        if (!Table_expand(hash_table)) {
-            return 1;
-        }
-        calculate_place(hash_table, key, &i, &index);
-    }
     Node* new_node = malloc(sizeof(Node));
     if (!new_node) {
         return 1;
@@ -107,6 +82,77 @@ int Table_push(Hash_table* hash_table, int key, double value) {
     new_node->value = value;
     new_node->key = key;
     hash_table->values[index] = new_node;
+    return 0;
+}
+
+
+int Table_clear(Hash_table* hash_table) {
+    if (hash_table == NULL || hash_table->values == NULL) {
+        return 1;
+    }
+    int i;
+    for (i = 0; i < hash_table->max_size; i++) {
+        if (hash_table->values[i]) {
+            free(hash_table->values[i]);
+            hash_table->values[i] = NULL;
+        }
+    }
+    return 0;
+}
+
+
+int Table_expand(Hash_table** hash_table) {
+    int old_size = (*hash_table)->max_size;
+    Hash_table* hash_table_new = malloc(sizeof(Hash_table));
+    hash_table_new->max_size = old_size * 2;
+    hash_table_new->values = calloc(hash_table_new->max_size, sizeof(Node*));
+
+    if (!hash_table_new->values) {
+        return 0;
+    }
+    int i;
+    for (i = 0; i < old_size; i++) {
+        if ((*hash_table)->values[i]) {
+            Table_push_expansion(hash_table_new,
+            (*hash_table)->values[i]->key,
+            (*hash_table)->values[i]->value
+            );
+            free((*hash_table)->values[i]);
+            (*hash_table)->values[i] = NULL;
+        }
+    }
+    Table_clear(*hash_table);
+    free((*hash_table)->values);
+    free(*hash_table);
+    *hash_table = hash_table_new;
+    return 1;
+}
+
+
+int Table_push(Hash_table** hash_table, int key, double value) {
+    if (hash_table == NULL || (*hash_table)->values == NULL) {
+        return 3;
+    }
+    double val = 0;
+    if (Table_search(*hash_table, key, &val)) {
+        return 2;
+    }
+    int i;
+    int index;
+    calculate_place(*hash_table, key, &i, &index);
+    if (i >= (*hash_table)->max_size) {
+        if (!Table_expand(hash_table)) {
+            return 1;
+        }
+        calculate_place(*hash_table, key, &i, &index);
+    }
+    Node* new_node = malloc(sizeof(Node));
+    if (!new_node) {
+        return 1;
+    }
+    new_node->value = value;
+    new_node->key = key;
+    (*hash_table)->values[index] = new_node;
     return 0;
 }
 
@@ -139,21 +185,6 @@ int Table_delete_value(Hash_table* hash_table, int key) {
 }
 
 
-int Table_clear(Hash_table* hash_table) {
-    if (hash_table == NULL || hash_table->values == NULL) {
-        return 1;
-    }
-    int i;
-    for (i = 0; i < hash_table->max_size; i++) {
-        if (hash_table->values[i]) {
-            free(hash_table->values[i]);
-            hash_table->values[i] = NULL;
-        }
-    }
-    return 0;
-}
-
-
 int main(void) {
     int command;
     int key;
@@ -166,7 +197,7 @@ int main(void) {
         switch (command) {
             case 1:
                 scanf(" %d %lf", &key, &value);
-                printf("%d\n", Table_push(hash_table, key, value));
+                printf("%d\n", Table_push(&hash_table, key, value));
                 break;
             case 2:
                 scanf(" %d", &key);
