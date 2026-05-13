@@ -1,10 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 
 #define A 2.718281828459045235360
-#define TABLE_SIZE 128
-#define DEL -1
+#define TABLE_SIZE 10
+
 
 typedef struct Node
 {
@@ -12,24 +11,6 @@ typedef struct Node
     double value;
     struct Node* next;
 } Node;
-
-
-int List_insert(Node** head, int key, double value) {
-    Node* new_node = malloc(sizeof(Node));
-    if (!new_node) {
-        return 0;
-    }
-    new_node->value = value;
-    new_node->next = NULL;
-    new_node->key = key;
-    if (!*head) {
-        *head = new_node;
-        return 0;
-    }
-    new_node->next = *head;
-    *head = new_node;
-    return 1;
-}
 
 
 Node* List_search(Node* head, int key) {
@@ -43,6 +24,27 @@ Node* List_search(Node* head, int key) {
         return head;
     }
     return NULL;
+}
+
+
+int List_insert(Node** head, int key, double value) {
+    if (List_search(*head, key) != NULL) {
+        return 2;
+    }
+    Node* new_node = malloc(sizeof(Node));
+    if (!new_node) {
+        return 1;
+    }
+    new_node->value = value;
+    new_node->next = NULL;
+    new_node->key = key;
+    if (!*head) {
+        *head = new_node;
+        return 0;
+    }
+    new_node->next = *head;
+    *head = new_node;
+    return 0;
 }
 
 
@@ -101,8 +103,7 @@ unsigned int Hash_function(unsigned int key) {
 
 
 int Table_push(Hash_table* Hash_table, int key, double value) {
-    List_insert(&Hash_table->values[Hash_function(key)], key, value);
-    return 0;
+    return List_insert(&Hash_table->values[Hash_function(key)], key, value);
 }
 
 
