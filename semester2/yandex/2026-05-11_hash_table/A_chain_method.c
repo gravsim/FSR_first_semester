@@ -102,18 +102,18 @@ unsigned int Hash_function(unsigned int key) {
 }
 
 
-int Table_push(Hash_table* Hash_table, int key, double value) {
-    return List_insert(&Hash_table->values[Hash_function(key)], key, value);
+int Table_push(Hash_table* hash_table, int key, double value) {
+    return List_insert(&hash_table->values[Hash_function(key)], key, value);
 }
 
 
-int Table_delete_value(Hash_table* Hash_table, int key) {
-    return List_delete(&Hash_table->values[Hash_function(key)], key);
+int Table_delete_value(Hash_table* hash_table, int key) {
+    return List_delete(&hash_table->values[Hash_function(key)], key);
 }
 
 
-int Table_search(Hash_table* Hash_table, int key, double* value) {
-    Node* found = List_search(Hash_table->values[Hash_function(key)], key);
+int Table_search(Hash_table* hash_table, int key, double* value) {
+    Node* found = List_search(hash_table->values[Hash_function(key)], key);
     if (found == NULL) {
         return 0;
     }
@@ -122,10 +122,10 @@ int Table_search(Hash_table* Hash_table, int key, double* value) {
 }
 
 
-int Table_clear(Hash_table* Hash_table) {
+int Table_clear(Hash_table* hash_table) {
     int i;
     for (i = 0; i < TABLE_SIZE; i++) {
-        List_free(&Hash_table->values[i]);
+        List_free(&hash_table->values[i]);
     }
     return 0;
 }
@@ -136,19 +136,19 @@ int main(void) {
     int key;
     double value;
     int status = 0;
-    Hash_table* Hash_table = malloc(sizeof(Hash_table));
-    Hash_table->max_size = TABLE_SIZE;
-    Hash_table->values = calloc(Hash_table->max_size, sizeof(Node*));
+    Hash_table* hash_table = malloc(sizeof(hash_table));
+    hash_table->max_size = TABLE_SIZE;
+    hash_table->values = calloc(hash_table->max_size, sizeof(Node*));
     do {
         scanf("%d", &command);
         switch (command) {
             case 1:
                 scanf(" %d %lf", &key, &value);
-                printf("%d\n", Table_push(Hash_table, key, value));
+                printf("%d\n", Table_push(hash_table, key, value));
                 break;
             case 2:
                 scanf(" %d", &key);
-                if (Table_search(Hash_table, key, &value)) {
+                if (Table_search(hash_table, key, &value)) {
                     printf("%lf\n", value);
                 } else {
                     printf("Not found\n");
@@ -156,21 +156,21 @@ int main(void) {
                 break;
             case 3:
                 scanf(" %d", &key);
-                if (Table_delete_value(Hash_table, key)) {
+                if (Table_delete_value(hash_table, key)) {
                     printf("0\n");
                 } else {
                     printf("Not found\n");
                 }
                 break;
             case 4:
-                Table_clear(Hash_table);
+                Table_clear(hash_table);
                 printf("%d\n", status);
                 break;
             default:
                 break;
         }
     } while (command != 0);
-    free(Hash_table->values);
-    free(Hash_table);
+    free(hash_table->values);
+    free(hash_table);
     return 0;
 }
