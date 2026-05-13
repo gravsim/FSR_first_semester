@@ -135,7 +135,6 @@ int main(void) {
     int command;
     int key;
     double value;
-    int status = 0;
     Hash_table* hash_table = malloc(sizeof(hash_table));
     hash_table->max_size = TABLE_SIZE;
     hash_table->values = calloc(hash_table->max_size, sizeof(Node*));
@@ -164,12 +163,13 @@ int main(void) {
                 break;
             case 4:
                 Table_clear(hash_table);
-                printf("%d\n", status);
+                printf("0\n");
                 break;
             default:
                 break;
         }
     } while (command != 0);
+    Table_clear(hash_table);
     free(hash_table->values);
     free(hash_table);
     return 0;
