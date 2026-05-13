@@ -16,7 +16,9 @@ typedef struct Node
 
 int List_insert(Node** head, int key, double value) {
     Node* new_node = malloc(sizeof(Node));
-    if (!new_node) return -2;
+    if (!new_node) {
+        return 0;
+    }
     new_node->value = value;
     new_node->next = NULL;
     new_node->key = key;
@@ -26,7 +28,7 @@ int List_insert(Node** head, int key, double value) {
     }
     new_node->next = *head;
     *head = new_node;
-    return 0;
+    return 1;
 }
 
 
@@ -44,28 +46,31 @@ Node* List_search(Node* head, int key) {
 }
 
 
-Node* List_delete(Node* head, int key) {
+int List_delete(Node** head, int key) {
     if (head == NULL) {
-        return NULL;
+        return 0;
     }
     Node* parent = NULL;
-    while (head->next && head->key != key) {
-        parent = head;
-        head = head->next;
+    Node* current = *head;
+    while (current && current->key != key) {
+        parent = current;
+        current = current->next;
     }
-    if (head->key == key) {
-        if (parent) {
-            parent->next = head->next;
-        }
-        free(head);
-        return head;
+    if (!current) {
+        return 0;
     }
-    return NULL;
+    if (parent) {
+        parent->next = current->next;
+    } else {
+        *head = current->next;
+    }
+    free(current);
+    return 1;
 }
 
 
 void List_free(Node **head) {
-    if (head == NULL) {
+    if (head == NULL || *head == NULL) {
         return;
     }
     Node *current = *head;
@@ -101,13 +106,8 @@ int Table_push(Hash_table* Hash_table, int key, double value) {
 }
 
 
-int Table_delete_value(Hash_table* Hash_table, int key, double* value) {
-    Node* found = List_delete(Hash_table->values[Hash_function(key)], key);
-    if (found == NULL) {
-        return 0;
-    }
-    *value = found->value;
-    return 1;
+int Table_delete_value(Hash_table* Hash_table, int key) {
+    return List_delete(&Hash_table->values[Hash_function(key)], key);
 }
 
 
@@ -137,7 +137,7 @@ int main(void) {
     int status = 0;
     Hash_table* Hash_table = malloc(sizeof(Hash_table));
     Hash_table->max_size = TABLE_SIZE;
-    Hash_table->values = calloc(Hash_table->max_size, sizeof(double));
+    Hash_table->values = calloc(Hash_table->max_size, sizeof(Node*));
     do {
         scanf("%d", &command);
         switch (command) {
@@ -155,7 +155,7 @@ int main(void) {
                 break;
             case 3:
                 scanf(" %d", &key);
-                if (Table_delete_value(Hash_table, key, &value)) {
+                if (Table_delete_value(Hash_table, key)) {
                     printf("0\n");
                 } else {
                     printf("Not found\n");
