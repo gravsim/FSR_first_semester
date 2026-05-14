@@ -3,6 +3,27 @@
 #include <math.h>
 
 
+typedef struct vec2 {
+    double x;
+    double y;
+} vec2;
+
+
+double get_norm(vec2 vector) {
+    return sqrt(vector.x * vector.x + vector.y * vector.y);
+}
+
+
+vec2 subtract(vec2 vector1, vec2 vector2) {
+    return (vec2){vector1.x - vector2.x, vector1.y - vector2.y};
+}
+
+
+double distance(vec2 vector1, vec2 vector2) {
+    return get_norm(subtract(vector2, vector1));
+}
+
+
 typedef struct DSU_node {
     struct DSU_node* parent;
     double sum;
@@ -10,8 +31,15 @@ typedef struct DSU_node {
 } DSU_node;
 
 
+typedef struct Edge {
+    int from;
+    int to;
+    double weight;
+} Edge;
+
+
 DSU_node* make_set(double sum) {
-    DSU_node* tmp = (DSU_node*)malloc(sizeof(DSU_node));
+    DSU_node* tmp = malloc(sizeof(DSU_node));
     tmp->sum = sum;
     tmp->parent = tmp;
     tmp->rang = 1;
@@ -28,7 +56,7 @@ DSU_node* find_set(DSU_node* node) {
 
 
 DSU_node* union_set(DSU_node* node1, DSU_node* node2, double sum) {
-    if (!node1 || !node2) {
+    if (node1 == NULL || node2 == NULL) {
         return NULL;
     }
     node1 = find_set(node1);
@@ -50,69 +78,52 @@ DSU_node* union_set(DSU_node* node1, DSU_node* node2, double sum) {
 }
 
 
-int swap_int(int** a, int** b) {
-    if (!a || !b) {
+int swap_edge(Edge* a, Edge* b) {
+    if (a == NULL || b == NULL) {
         return -1;
     }
-    int* tmp = *a;
+    Edge tmp = *a;
     *a = *b;
     *b = tmp;
     return 1;
 }
 
 
-int swap_double(double* a, double* b) {
-    if (!a || !b) {
-        return -1;
-    }
-    double tmp = *a;
-    *a = *b;
-    *b = tmp;
-    return 1;
-}
-
-
-void quick_sort(double* main_array, int** side_array, int size, int down, int up) {
+void quick_sort(Edge* array, int down, int up) {
     if (down >= up) {
         return;
     }
-    double pivot = main_array[(up + down) / 2];
+    Edge pivot = array[(up + down) / 2];
     int left = down;
     int right = up;
     while (left <= right) {
-        while (main_array[left] < pivot) {
+        while (array[left].weight < pivot.weight) {
             left++;
         }
-        while (pivot < main_array[right]) {
+        while (pivot.weight < array[right].weight) {
             right--;
         }
         if (left <= right) {
-            swap_double(main_array + left, main_array + right);
-            swap_int(side_array + left, side_array + right);
+            swap_edge(array + left, array + right);
             left++;
             right--;
         }
     }
-    quick_sort(main_array, side_array, size, down, right);
-    quick_sort(main_array, side_array, size, left, up);
+    quick_sort(array, down, right);
+    quick_sort(array, left, up);
 }
 
 
-int flatten_indices(int N, int i, int j) {
-    return i * (N - 1) - i * (i + 1) / 2 + j - 1;
-}
-
-
-double Kruskal(double* edges, int** incidences, int N, DSU_node** nodes, int components) {
-    if (!edges || !incidences || !nodes) {
+double Kruskal(Edge* edges, int components, DSU_node** nodes) {
+    if (edges == NULL || nodes == NULL) {
         return -1;
     }
     int i = 0;
-    int E = N * (N - 1) / 2;
-    quick_sort(edges, incidences, E, 0, E - 1);
+    int E = components * (components - 1) / 2;
+    quick_sort(edges, 0, E - 1);
     while (components > 1) {
-        if (find_set(nodes[incidences[i][0]]) != find_set(nodes[incidences[i][1]])) {
-            union_set(nodes[incidences[i][0]], nodes[incidences[i][1]], edges[i]);
+        if (find_set(nodes[edges[i].from]) != find_set(nodes[edges[i].to])) {
+            union_set(nodes[edges[i].from], nodes[edges[i].to], edges[i].weight);
             components--;
         }
         i++;
@@ -123,55 +134,39 @@ double Kruskal(double* edges, int** incidences, int N, DSU_node** nodes, int com
 
 int main(void) {
     int N;
-    int edges_amount = 0;
     int i;
     int j;
-    int x;
-    int y;
-    int index = 0;
-    int sector_x;
-    int sector_y;
-    scanf("%d %d %d", &sector_x, &sector_y, &N);
+    double sector_x;
+    double sector_y;
+    scanf("%lf %lf %d", &sector_y, &sector_x, &N);
     N++;
-    double** positions = (double**)calloc(N, sizeof(double*));
-    DSU_node** nodes = (DSU_node**)calloc(N, sizeof(DSU_node*));
+    vec2* points = calloc(N, sizeof(vec2));
+    DSU_node** nodes = calloc(N, sizeof(DSU_node*));
     int E = N * (N - 1) / 2;
-    int components = N;
-    double* edges = (double*)calloc(E, sizeof(double));
-    int** incidences = (int**)calloc(E, sizeof(int*));
+    Edge* edges = calloc(E, sizeof(Edge));
     for (i = 0; i < N; i++) {
-        positions[i] = (double*)calloc(2, sizeof(double));
         nodes[i] = make_set(0);
     }
-    for (i = 0; i < E; i++) {
-        incidences[i] = (int*)calloc(2, sizeof(int));
-    }
+    int edges_amount = 0;
     for (i = 0; i < N - 1; i++) {
-        scanf("%lf %lf", positions[i], positions[i] + 1);
+        scanf("%lf %lf", &points[i].y, &points[i].x);
     }
-    positions[i][0] = sector_x / 2;
-    positions[i][1] = sector_y;
-    for (i = 0; i < N - 1; i++) {
-        for (j = i + 1; j < N; j++) {
-            edges[index] = sqrt(
-                pow(positions[i][0] - positions[j][0], 2)
-                + pow(positions[i][1] - positions[j][1], 2));
-            incidences[index][0] = i;
-            incidences[index][1] = j;
-            index++;
+    points[N - 1].x = sector_x / 2;
+    points[N - 1].y = sector_y;
+    for (i = 0; i < N; i++) {
+        for (j = 0; j < i; j++) {
+            edges[edges_amount].from = j;
+            edges[edges_amount].to = i;
+            edges[edges_amount].weight = distance(points[i], points[j]);
+            edges_amount++;
         }
     }
-    printf("%.6lf", Kruskal(edges, incidences, N, nodes, components));
+    printf("%.6lf", Kruskal(edges, N, nodes));
     for (i = 0; i < N; i++) {
-        free(positions[i]);
         free(nodes[i]);
     }
-    for (i = 0; i < E; i++) {
-        free(incidences[i]);
-    }
-    free(edges);
-    free(incidences);
-    free(positions);
     free(nodes);
+    free(edges);
+    free(points);
     return 0;
 }

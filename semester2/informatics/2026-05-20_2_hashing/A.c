@@ -2,12 +2,12 @@
 #include <stdlib.h>
 
 
-#define MAX_LENGTH 10
+#define MAX_LENGTH 11
 #define ALPHABET_SIZE 26
 
 
 struct TrieNode {
-    struct TrieNode** children;
+    struct TrieNode* children[ALPHABET_SIZE];
     int end_of_word;
 } typedef TrieNode;
 
@@ -47,8 +47,7 @@ int Trie_delete_node(TrieNode** node) {
 
 
 TrieNode* Trie_new_node(void) {
-    TrieNode* new_node = malloc(sizeof(TrieNode));
-    new_node->children = calloc(ALPHABET_SIZE, sizeof(TrieNode*));
+    TrieNode* new_node = calloc(1, sizeof(TrieNode));
     new_node->end_of_word = 0;
     return new_node;
 }
@@ -83,7 +82,6 @@ int Trie_free_node(TrieNode** node) {
             Trie_free_node(&(*node)->children[i]);
         }
     }
-    free((*node)->children);
     free(*node);
     *node = NULL;
     return 1;
@@ -95,7 +93,7 @@ int read_word(int* length, char* string) {
         return 0;
     }
     *length = 0;
-    scanf(" %c", string + *length);
+    scanf(" %s", string + *length);
     (*length)++;
     while (scanf("%c", string + *length) != EOF && string[*length] != '\n') {
         (*length)++;
@@ -111,7 +109,7 @@ int main(void) {
     char string[MAX_LENGTH];
     TrieNode** found;
     do {
-        scanf("%c", &command);
+        scanf(" %c", &command);
         switch (command) {
             case '+':
                 read_word(&length, string);
