@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #define A 2.718281828459045235360
 #define TABLE_SIZE 10
+#define FUNCTION_TYPE 0
 
 
 typedef struct Node
@@ -97,22 +99,27 @@ double fraction(double a) {
 }
 
 
-unsigned int Hash_function(unsigned int key) {
+int Hash_function_0(int key) {
     return (unsigned int)(fraction(key * A) * TABLE_SIZE) % TABLE_SIZE;
 }
 
 
-int Table_push(Hash_table* hash_table, int key, double value) {
+int Hash_function_1(int key) {
+    return 0;
+}
+
+
+int Table_push(Hash_table* hash_table, int key, double value, int (*Hash_function)(int)) {
     return List_insert(&hash_table->values[Hash_function(key)], key, value);
 }
 
 
-int Table_delete_value(Hash_table* hash_table, int key) {
+int Table_delete_value(Hash_table* hash_table, int key, int (*Hash_function)(int)) {
     return List_delete(&hash_table->values[Hash_function(key)], key);
 }
 
 
-int Table_search(Hash_table* hash_table, int key, double* value) {
+int Table_search(Hash_table* hash_table, int key, double* value, int (*Hash_function)(int)) {
     Node* found = List_search(hash_table->values[Hash_function(key)], key);
     if (found == NULL) {
         return 0;
@@ -135,31 +142,54 @@ int main(void) {
     int command;
     int key;
     double value;
+    double clocks = 0;
+    int t0;
+    int t1;
     Hash_table* hash_table = malloc(sizeof(hash_table));
     hash_table->max_size = TABLE_SIZE;
     hash_table->values = calloc(hash_table->max_size, sizeof(Node*));
+    int (*function)(int);
+    switch (FUNCTION_TYPE) {
+        case 0:
+            function = Hash_function_0;
+            break;
+        case 1:
+            function = Hash_function_1;
+            break;
+        default:
+            break;
+    }
     do {
         scanf("%d", &command);
         switch (command) {
             case 1:
                 scanf(" %d %lf", &key, &value);
-                printf("%d\n", Table_push(hash_table, key, value));
+                t0 = clock();
+                printf("%d\n", Table_push(hash_table, key, value, function));
+                t1 = clock();
+                clocks += t1 - t0;
                 break;
             case 2:
                 scanf(" %d", &key);
-                if (Table_search(hash_table, key, &value)) {
+                t0 = clock();
+                if (Table_search(hash_table, key, &value, function)) {
                     printf("%lf\n", value);
                 } else {
                     printf("Not found\n");
                 }
+                t1 = clock();
+                clocks += t1 - t0;
                 break;
             case 3:
                 scanf(" %d", &key);
-                if (Table_delete_value(hash_table, key)) {
+                t0 = clock();
+                if (Table_delete_value(hash_table, key, function)) {
                     printf("0\n");
                 } else {
                     printf("Not found\n");
                 }
+                t1 = clock();
+                clocks += t1 - t0;
                 break;
             case 4:
                 Table_clear(hash_table);
@@ -169,6 +199,7 @@ int main(void) {
                 break;
         }
     } while (command != 0);
+    //printf("Time: %lf\n", clocks / CLOCKS_PER_SEC);
     Table_clear(hash_table);
     free(hash_table->values);
     free(hash_table);
