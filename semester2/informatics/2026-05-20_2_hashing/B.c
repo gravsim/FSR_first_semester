@@ -60,9 +60,9 @@ int copy_string(char* place, char* string) {
 }
 
 
-int List_insert(Node** head, char* latin, char* english) {
+Node* List_insert(Node** head, char* latin, char* english) {
     if (head == NULL || latin == NULL) {
-        return 2;
+        return NULL;
     }
     Node* node;
     if (*head) {
@@ -70,7 +70,7 @@ int List_insert(Node** head, char* latin, char* english) {
         if (node != NULL) {
             node->english[node->size] = calloc(MAX_LENGTH, sizeof(char));
             copy_string(node->english[node->size++], english);
-            return 2;
+            return node;
         }
     }
     node = malloc(sizeof(Node));
@@ -78,8 +78,8 @@ int List_insert(Node** head, char* latin, char* english) {
     node->max_size = 10;
     node->latin = calloc(MAX_LENGTH, sizeof(char));
     node->english = calloc(node->max_size, sizeof(char*));
-    if (!node) {
-        return 1;
+    if (node == NULL) {
+        return NULL;
     }
     copy_string(node->latin, latin);
     node->english[node->size] = calloc(MAX_LENGTH, sizeof(char));
@@ -87,11 +87,11 @@ int List_insert(Node** head, char* latin, char* english) {
     if (*head == NULL) {
         node->next = NULL;
         *head = node;
-        return 0;
+        return node;
     }
     node->next = *head;
     *head = node;
-    return 0;
+    return node;
 }
 
 
@@ -121,14 +121,14 @@ unsigned int Hash_function(char* string) {
     unsigned int hash = 1;
     int i = 0;
     while (string[i]) {
-        hash = hash * A + get_index(string[i]);
+        hash += i *  get_index(string[i]);
         i++;
     }
     return hash % TABLE_SIZE;
 }
 
 
-int Table_push(Hash_table* hash_table, char* latin, char* english) {
+Node* Table_push(Hash_table* hash_table, char* latin, char* english) {
     return List_insert(&hash_table->values[Hash_function(latin)], latin, english);
 }
 
@@ -192,16 +192,27 @@ int main(void) {
     char english[MAX_LENGTH];
     int i;
     int j;
+    Node* pointers[TABLE_SIZE];
+    int pointers_amount = 0;
     scanf("%d", &words_amount);
     int has_comma;
     for (i = 0; i < words_amount; i++) {
         read_english(&length, english);
         do {
             has_comma = read_latin(&length, latin);
-            Table_push(hash_table, latin, english);
+            pointers[pointers_amount++] = Table_push(hash_table, latin, english);
         } while (has_comma);
     }
     Node* current;
+    int unique_latin = 0;
+    for (i = 0; i < TABLE_SIZE; i++) {
+        current = hash_table->values[i];
+        while (current) {
+            unique_latin++;
+            current = current->next;
+        }
+    }
+    printf("%d\n", unique_latin);
     for (i = 0; i < TABLE_SIZE; i++) {
         current = hash_table->values[i];
         while (current) {
