@@ -61,9 +61,14 @@ int copy_string(char* place, char* string) {
     return 1;
 }
 
+
 int expand(Node* node) {
+    if (node == NULL) {
+        return 0;
+    }
     node->max_size *= 2;
     node->english = realloc(node->english, node->max_size * sizeof(char*));
+    return 1;
 }
 
 
@@ -156,53 +161,25 @@ int Table_search(Hash_table* hash_table, char* string) {
 
 
 int Table_clear(Hash_table* hash_table) {
+    if (hash_table == NULL) {
+        return 0;
+    }
     int i;
     for (i = 0; i < TABLE_SIZE; i++) {
         List_free(&hash_table->values[i]);
     }
-    return 0;
-}
-
-
-int read_english(int* length, char* english) {
-    if (length == NULL || english == NULL) {
-        return 0;
-    }
-    *length = 0;
-    scanf(" %c", english + *length);
-    (*length)++;
-    while (scanf("%c", english + *length) != EOF && english[*length] != '-') {
-        (*length)++;
-    }
-    english[*length - 1] = '\0';
     return 1;
 }
 
 
-int read_latin(int* length, char* latin) {
-    if (length == NULL || latin == NULL) {
+int swap_nodes(Node** a, Node** b) {
+    if (a == NULL || b == NULL) {
         return 0;
     }
-    *length = 0;
-    scanf(" %c", latin + *length);
-    (*length)++;
-    while (scanf("%c", latin + *length) != EOF && latin[*length] != '\n' && latin[*length] != ',') {
-        (*length)++;
-    }
-    if (latin[*length] == ',') {
-        latin[*length] = '\0';
-        return 1;
-    }
-    latin[*length] = '\0';
-    return 0;
-}
-
-
-int swap_nodes(Node** a, Node** b) {
     Node* tmp = *a;
     *a = *b;
     *b = tmp;
-    return 0;
+    return 1;
 }
 
 
@@ -254,6 +231,40 @@ void quick_sort(Node** array, int size, int down, int up) {
 }
 
 
+int read_english(int* length, char* english) {
+    if (length == NULL || english == NULL) {
+        return 0;
+    }
+    *length = 0;
+    scanf(" %c", english + *length);
+    (*length)++;
+    while (scanf("%c", english + *length) != EOF && english[*length] != '-') {
+        (*length)++;
+    }
+    english[*length - 1] = '\0';
+    return 1;
+}
+
+
+int read_latin(int* length, char* latin) {
+    if (length == NULL || latin == NULL) {
+        return 0;
+    }
+    *length = 0;
+    scanf(" %c", latin + *length);
+    (*length)++;
+    while (scanf("%c", latin + *length) != EOF && latin[*length] != '\n' && latin[*length] != ',') {
+        (*length)++;
+    }
+    if (latin[*length] == ',') {
+        latin[*length] = '\0';
+        return 1;
+    }
+    latin[*length] = '\0';
+    return 0;
+}
+
+
 int main(void) {
     int words_amount;
     Hash_table* hash_table = malloc(sizeof(Hash_table));
@@ -266,6 +277,7 @@ int main(void) {
     int j;
     Node* pointers[TABLE_SIZE];
     Node* node;
+    Node* current;
     int pointers_amount = 0;
     scanf("%d", &words_amount);
     int new;
@@ -280,7 +292,6 @@ int main(void) {
             }
         } while (has_comma);
     }
-    Node* current;
     printf("%d\n", pointers_amount);
     quick_sort(pointers, pointers_amount, 0, pointers_amount - 1);
     for (i = 0; i < pointers_amount; i++) {
