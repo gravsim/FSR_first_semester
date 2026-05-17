@@ -62,7 +62,7 @@ int copy_string(char* place, char* string) {
 }
 
 
-Node* List_insert(Node** head, char* latin, char* english) {
+Node* List_insert(Node** head, char* latin, char* english, int* new) {
     if (head == NULL || latin == NULL) {
         return NULL;
     }
@@ -70,11 +70,13 @@ Node* List_insert(Node** head, char* latin, char* english) {
     if (*head) {
         node = List_search(*head, latin);
         if (node != NULL) {
+            *new = 0;
             node->english[node->size] = calloc(MAX_LENGTH, sizeof(char));
             copy_string(node->english[node->size++], english);
             return node;
         }
     }
+    *new = 1;
     node = malloc(sizeof(Node));
     node->size = 0;
     node->max_size = 10;
@@ -134,8 +136,8 @@ unsigned int Hash_function(char* string) {
 }
 
 
-Node* Table_push(Hash_table* hash_table, char* latin, char* english) {
-    return List_insert(&hash_table->values[Hash_function(latin)], latin, english);
+Node* Table_push(Hash_table* hash_table, char* latin, char* english, int* new) {
+    return List_insert(&hash_table->values[Hash_function(latin)], latin, english, new);
 }
 
 
@@ -188,6 +190,62 @@ int read_latin(int* length, char* latin) {
 }
 
 
+int swap_nodes(Node** a, Node** b) {
+    Node* tmp = *a;
+    *a = *b;
+    *b = tmp;
+    return 0;
+}
+
+
+int node_smaller(Node* node1, Node* node2) {
+    if (node1 == NULL || node2 == NULL) {
+        return 0;
+    }
+    char* string1 = node1->latin;
+    char* string2 = node2->latin;
+    int i = 0;
+    while (string1[i] && string2[i] && string1[i] == string2[i]) {
+        i++;
+    }
+    if (!string1[i] && !string2[i]) {
+        return 0;
+    }
+    if (!string1[i]) {
+        return 1;
+    }
+    if (!string2[i]) {
+        return 0;
+    }
+    return string1[i] < string2[i];
+}
+
+
+void quick_sort(Node** array, int size, int down, int up) {
+    if (down >= up) {
+        return;
+    }
+    Node* pivot = array[(up + down) / 2];
+    int left = down;
+    int right = up;
+    while (left <= right) {
+        while (node_smaller(array[left], pivot)) {
+            left++;
+        }
+        while (node_smaller(pivot, array[right])) {
+            right--;
+        }
+        if (left <= right) {
+            swap_nodes(array + left, array + right);
+            left++;
+            right--;
+        }
+    }
+    quick_sort(array, size, down, right);
+    quick_sort(array, size, left, up);
+}
+
+
 int main(void) {
     int words_amount;
     Hash_table* hash_table = malloc(sizeof(Hash_table));
@@ -199,36 +257,31 @@ int main(void) {
     int i;
     int j;
     Node* pointers[TABLE_SIZE];
+    Node* node;
     int pointers_amount = 0;
     scanf("%d", &words_amount);
+    int new;
     int has_comma;
     for (i = 0; i < words_amount; i++) {
         read_english(&length, english);
         do {
             has_comma = read_latin(&length, latin);
-            pointers[pointers_amount++] = Table_push(hash_table, latin, english);
+            node = Table_push(hash_table, latin, english, &new);
+            if (new) {
+                pointers[pointers_amount++] = node;
+            }
         } while (has_comma);
     }
     Node* current;
-    int unique_latin = 0;
-    for (i = 0; i < TABLE_SIZE; i++) {
-        current = hash_table->values[i];
-        while (current) {
-            unique_latin++;
-            current = current->next;
+    printf("%d\n", pointers_amount);
+    quick_sort(pointers, pointers_amount, 0, pointers_amount - 1);
+    for (i = 0; i < pointers_amount; i++) {
+        current = pointers[i];
+        printf("%s - ", current->latin);
+        for (j = 0; j < current->size - 1; j++) {
+            printf("%s, ", current->english[j]);
         }
-    }
-    printf("%d\n", unique_latin);
-    for (i = 0; i < TABLE_SIZE; i++) {
-        current = hash_table->values[i];
-        while (current) {
-            printf("%s - ", current->latin);
-            for (j = 0; j < current->size - 1; j++) {
-                printf("%s, ", current->english[j]);
-            }
-            printf("%s\n", current->english[j]);
-            current = current->next;
-        }
+        printf("%s\n", current->english[j]);
     }
     Table_clear(hash_table);
     free(hash_table->values);
