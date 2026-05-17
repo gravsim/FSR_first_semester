@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 
-#define TABLE_SIZE 1000000
+#define TABLE_SIZE 100000
 #define MAX_LENGTH 17
 #define A 67
 
@@ -48,53 +48,49 @@ Node* List_search(Node* head, char* string) {
 }
 
 
-int List_insert(Node** head, char* string, int length) {
-    if (head == NULL || string == NULL) {
-        return 2;
-    }
-    if (*head && List_search(*head, string) != NULL) {
-        return 2;
-    }
-    Node* new_node = malloc(sizeof(Node));
-    if (!new_node) {
-        return 1;
-    }
-    int i;
-    for (i = 0; i < length + 1; i++) {
-        new_node->latin[i] = string[i];
-    }
-    new_node->next = NULL;
-    if (*head == NULL) {
-        *head = new_node;
+int copy_string(char* place, char* string, int length) {
+    if (string == NULL || place == NULL) {
         return 0;
     }
-    new_node->next = *head;
-    *head = new_node;
-    return 0;
+    int i;
+    for (i = 0; i < length; i++) {
+        place[i] = string[i];
+    }
+    return 1;
 }
 
 
-int List_delete(Node** head, char* string) {
-    if (head == NULL) {
+int List_insert(Node** head, char* latin, char* english, int length) {
+    if (head == NULL || latin == NULL) {
+        return 2;
+    }
+    Node* node;
+    if (*head) {
+        node = List_search(*head, latin);
+        if (node != NULL) {
+            node->english[node->size] = calloc(MAX_LENGTH, sizeof(char));
+            copy_string(node->english[node->size++], english, length);
+            return 2;
+        }
+    }
+    node = malloc(sizeof(Node));
+    node->size = 0;
+    node->max_size = 10;
+    node->english = calloc(node->max_size, sizeof(char*));
+    if (!node) {
+        return 1;
+    }
+    copy_string(node->latin, latin, length);
+    node->english[node->size] = calloc(MAX_LENGTH, sizeof(char));
+    copy_string(node->english[node->size++], english, length);
+    if (*head == NULL) {
+        node->next = NULL;
+        *head = node;
         return 0;
     }
-    Node* parent = NULL;
-    Node* current = *head;
-    while (current && !string_equal(current->latin, string)) {
-        parent = current;
-        current = current->next;
-    }
-    if (!current) {
-        return 0;
-    }
-    if (parent) {
-        parent->next = current->next;
-    } else {
-        *head = current->next;
-    }
-    free(current->latin);
-    free(current);
-    return 1;
+    node->next = *head;
+    *head = node;
+    return 0;
 }
 
 
@@ -106,7 +102,7 @@ void List_free(Node **head) {
     Node *next;
     while (current) {
         next = current->next;
-        free(current->latin);
+        free(current->english);
         free(current);
         current = next;
     }
@@ -120,28 +116,24 @@ typedef struct Hash_table {
 } Hash_table;
 
 
-unsigned int Hash_function(char* string, int length) {
+unsigned int Hash_function(char* string) {
     unsigned int hash = 1;
-    int i;
-    for (i = 0; i < length; i++) {
+    int i = 0;
+    while (string[i]) {
         hash = hash * A + get_index(string[i]);
+        i++;
     }
     return hash % TABLE_SIZE;
 }
 
 
-int Table_push(Hash_table* hash_table, char* string, int length) {
-    return List_insert(&hash_table->values[Hash_function(string, length)], string, length);
+int Table_push(Hash_table* hash_table, char* latin, char* english, int length) {
+    return List_insert(&hash_table->values[Hash_function(latin)], latin, english, length);
 }
 
 
-int Table_delete_value(Hash_table* hash_table, char* string, int length) {
-    return List_delete(&hash_table->values[Hash_function(string, length)], string);
-}
-
-
-int Table_search(Hash_table* hash_table, char* string, int length) {
-    Node* found = List_search(hash_table->values[Hash_function(string, length)], string);
+int Table_search(Hash_table* hash_table, char* string) {
+    Node* found = List_search(hash_table->values[Hash_function(string)], string);
     return found != NULL;
 }
 
@@ -162,7 +154,7 @@ int read_english(int* length, char* english) {
     *length = 0;
     scanf(" %c", english + *length);
     (*length)++;
-    while (scanf("%c", english + *length) != EOF && english[*length] != ' ') {
+    while (scanf("%c", english + *length) != EOF && english[*length] != '-') {
         (*length)++;
     }
     (*length)--;
@@ -177,7 +169,7 @@ int read_latin(int* length, char* latin) {
     *length = 0;
     scanf(" %c", latin + *length);
     (*length)++;
-    while (scanf("%c", latin + *length) != EOF && (latin[*length] != '\n' ||latin[*length] != ',')) {
+    while (scanf("%c", latin + *length) != EOF && latin[*length] != '\n' && latin[*length] != ',') {
         (*length)++;
     }
     if (latin[*length] == ',') {
@@ -195,18 +187,33 @@ int main(void) {
     hash_table->max_size = TABLE_SIZE;
     hash_table->values = calloc(hash_table->max_size, sizeof(Node*));
     int length = 0;
-    char* string = calloc(MAX_LENGTH, sizeof(char));
     char latin[MAX_LENGTH];
     char english[MAX_LENGTH];
     int i;
+    int j;
     scanf("%d", &words_amount);
+    int result;
     for (i = 0; i < words_amount; i++) {
         read_english(&length, english);
-        do {} while (read_latin(&length, latin));
-        Table_push(hash_table, latin, length);
+        do {
+            result = read_latin(&length, latin);
+            // printf("%s\n", latin);
+            Table_push(hash_table, latin, english, length);
+            printf("%d\n", i);
+        } while (result);
+    }
+    Node* current;
+    for (i = 0; i < TABLE_SIZE; i++) {
+        current = hash_table->values[i];
+        while (current) {
+            printf("%s - ", hash_table->values[i]->latin);
+            for (j = 0; j < hash_table->values[i]->size; j++) {
+                printf("%s\n", hash_table->values[i]->english[j]);
+            }
+            current = current->next;
+        }
     }
     Table_clear(hash_table);
-    free(string);
     free(hash_table->values);
     free(hash_table);
     return 0;
