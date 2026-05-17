@@ -26,7 +26,7 @@ int string_equal(char* string1, char* string2) {
 
 typedef struct Node
 {
-    char latin[MAX_LENGTH];
+    char* latin;
     char** english;
     int size;
     int max_size;
@@ -48,19 +48,19 @@ Node* List_search(Node* head, char* string) {
 }
 
 
-int copy_string(char* place, char* string, int length) {
+int copy_string(char* place, char* string) {
     if (string == NULL || place == NULL) {
         return 0;
     }
     int i;
-    for (i = 0; i < length; i++) {
+    for (i = 0; i < string[i]; i++) {
         place[i] = string[i];
     }
     return 1;
 }
 
 
-int List_insert(Node** head, char* latin, char* english, int length) {
+int List_insert(Node** head, char* latin, char* english) {
     if (head == NULL || latin == NULL) {
         return 2;
     }
@@ -69,20 +69,21 @@ int List_insert(Node** head, char* latin, char* english, int length) {
         node = List_search(*head, latin);
         if (node != NULL) {
             node->english[node->size] = calloc(MAX_LENGTH, sizeof(char));
-            copy_string(node->english[node->size++], english, length);
+            copy_string(node->english[node->size++], english);
             return 2;
         }
     }
     node = malloc(sizeof(Node));
     node->size = 0;
     node->max_size = 10;
+    node->latin = calloc(MAX_LENGTH, sizeof(char));
     node->english = calloc(node->max_size, sizeof(char*));
     if (!node) {
         return 1;
     }
-    copy_string(node->latin, latin, length);
+    copy_string(node->latin, latin);
     node->english[node->size] = calloc(MAX_LENGTH, sizeof(char));
-    copy_string(node->english[node->size++], english, length);
+    copy_string(node->english[node->size++], english);
     if (*head == NULL) {
         node->next = NULL;
         *head = node;
@@ -127,8 +128,8 @@ unsigned int Hash_function(char* string) {
 }
 
 
-int Table_push(Hash_table* hash_table, char* latin, char* english, int length) {
-    return List_insert(&hash_table->values[Hash_function(latin)], latin, english, length);
+int Table_push(Hash_table* hash_table, char* latin, char* english) {
+    return List_insert(&hash_table->values[Hash_function(latin)], latin, english);
 }
 
 
@@ -157,7 +158,7 @@ int read_english(int* length, char* english) {
     while (scanf("%c", english + *length) != EOF && english[*length] != '-') {
         (*length)++;
     }
-    (*length)--;
+    english[*length - 1] = '\0';
     return 1;
 }
 
@@ -173,10 +174,10 @@ int read_latin(int* length, char* latin) {
         (*length)++;
     }
     if (latin[*length] == ',') {
-        (*length)--;
+        latin[*length] = '\0';
         return 1;
     }
-    (*length)--;
+    latin[*length] = '\0';
     return 0;
 }
 
@@ -192,24 +193,23 @@ int main(void) {
     int i;
     int j;
     scanf("%d", &words_amount);
-    int result;
+    int has_comma;
     for (i = 0; i < words_amount; i++) {
         read_english(&length, english);
         do {
-            result = read_latin(&length, latin);
-            // printf("%s\n", latin);
-            Table_push(hash_table, latin, english, length);
-            printf("%d\n", i);
-        } while (result);
+            has_comma = read_latin(&length, latin);
+            Table_push(hash_table, latin, english);
+        } while (has_comma);
     }
     Node* current;
     for (i = 0; i < TABLE_SIZE; i++) {
         current = hash_table->values[i];
         while (current) {
-            printf("%s - ", hash_table->values[i]->latin);
-            for (j = 0; j < hash_table->values[i]->size; j++) {
-                printf("%s\n", hash_table->values[i]->english[j]);
+            printf("%s - ", current->latin);
+            for (j = 0; j < current->size - 1; j++) {
+                printf("%s, ", current->english[j]);
             }
+            printf("%s\n", current->english[j]);
             current = current->next;
         }
     }
