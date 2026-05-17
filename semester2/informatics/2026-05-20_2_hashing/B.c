@@ -52,10 +52,12 @@ int copy_string(char* place, char* string) {
     if (string == NULL || place == NULL) {
         return 0;
     }
-    int i;
-    for (i = 0; i < string[i]; i++) {
+    int i = 0;
+    while (string[i]) {
         place[i] = string[i];
+        i++;
     }
+    place[i] = '\0';
     return 1;
 }
 
@@ -103,7 +105,11 @@ void List_free(Node **head) {
     Node *next;
     while (current) {
         next = current->next;
+        for (int i = 0; i < current->size; i++) {
+            free(current->english[i]);
+        }
         free(current->english);
+        free(current->latin);
         free(current);
         current = next;
     }
