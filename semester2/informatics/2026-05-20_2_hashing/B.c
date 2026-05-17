@@ -61,6 +61,11 @@ int copy_string(char* place, char* string) {
     return 1;
 }
 
+int expand(Node* node) {
+    node->max_size *= 2;
+    node->english = realloc(node->english, node->max_size * sizeof(char*));
+}
+
 
 Node* List_insert(Node** head, char* latin, char* english, int* new) {
     if (head == NULL || latin == NULL) {
@@ -71,6 +76,9 @@ Node* List_insert(Node** head, char* latin, char* english, int* new) {
         node = List_search(*head, latin);
         if (node != NULL) {
             *new = 0;
+            if (node->size >= node->max_size) {
+                expand(node);
+            }
             node->english[node->size] = calloc(MAX_LENGTH, sizeof(char));
             copy_string(node->english[node->size++], english);
             return node;
@@ -127,9 +135,9 @@ typedef struct Hash_table {
 
 unsigned int Hash_function(char* string) {
     unsigned int hash = 1;
-    int i = 0;
+    unsigned int i = 0;
     while (string[i]) {
-        hash += i *  get_index(string[i]);
+        hash = hash * A + get_index(string[i]);
         i++;
     }
     return hash % TABLE_SIZE;
