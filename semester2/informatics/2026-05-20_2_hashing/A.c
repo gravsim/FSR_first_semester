@@ -1,12 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 
 
-#define A 2.718281828459045235360
-#define TABLE_SIZE 10000
-#define FUNCTION_TYPE 0
+#define TABLE_SIZE 1000000
 #define MAX_LENGTH 11
+#define A 67
 
 
 int get_index(char symbol) {
@@ -16,16 +14,13 @@ int get_index(char symbol) {
 
 int string_equal(char* string1, char* string2) {
     if (string1 == NULL || string2 == NULL) {
-        return -1;
+        return 0;
     }
     int i = 0;
     while (string1[i] && string2[i] && string1[i] == string2[i]) {
         i++;
     }
-    if (i == MAX_LENGTH) {
-        return 1;
-    }
-    return 0;
+    return !(string1[i] && string2[i]);
 }
 
 
@@ -125,19 +120,13 @@ typedef struct Hash_table {
 } Hash_table;
 
 
-double fraction(double a) {
-    return a - (int)a;
-}
-
-
-int Hash_function(char* string, int length) {
-    int x = 6;
-    int hash = 1;
+unsigned int Hash_function(char* string, int length) {
+    unsigned int hash = 1;
     int i;
     for (i = 0; i < length; i++) {
-        hash += get_index(string[i]) * hash * x;
+        hash = hash * A + get_index(string[i]);
     }
-    return (int)(fraction(hash * A) * TABLE_SIZE) % TABLE_SIZE;
+    return hash % TABLE_SIZE;
 }
 
 
@@ -176,6 +165,7 @@ int read_word(int* length, char* string) {
     while (scanf("%c", string + *length) != EOF && string[*length] != '\n') {
         (*length)++;
     }
+    (*length)--;
     return 1;
 }
 
@@ -188,7 +178,7 @@ int main(void) {
     int length = 0;
     char* string = calloc(MAX_LENGTH, sizeof(char));
     do {
-        scanf(" %c", &command);
+        scanf("%c", &command);
         switch (command) {
             case '+':
                 read_word(&length, string);
@@ -211,6 +201,7 @@ int main(void) {
         }
     } while (command != '#');
     Table_clear(hash_table);
+    free(string);
     free(hash_table->values);
     free(hash_table);
     return 0;
